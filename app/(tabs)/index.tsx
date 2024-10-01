@@ -23,8 +23,9 @@ type FoodPoint = {
 };
 
 export default function HomeScreen() {
+  // Declarar el estado con el tipo LocationType
   const [location, setLocation] = useState<LocationType>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Estado para manejar el indicador de carga
 
   // Lista de puntos de comida
   const foodPoints: FoodPoint[] = [
@@ -38,13 +39,13 @@ export default function HomeScreen() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.log('Permission to access location was denied');
-        setLoading(false);
+        setLoading(false); // Dejar de cargar si no se concede el permiso
         return;
       }
 
       try {
         let currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
+          accuracy: Location.Accuracy.Highest, // Mayor precisión
         });
         setLocation({
           latitude: currentLocation.coords.latitude,
@@ -55,7 +56,7 @@ export default function HomeScreen() {
       } catch (error) {
         console.error('Error obteniendo la ubicación:', error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Dejar de cargar cuando se obtenga la ubicación o si falla
       }
     })();
   }, []);
@@ -69,19 +70,21 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
+      {/* Título y saludo */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
       </ThemedView>
 
+      {/* Mapa de Google Maps */}
       <View style={styles.mapContainer}>
         {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color="#0000ff" /> // Indicador de carga
         ) : location ? (
           <MapView
             style={styles.map}
-            region={location}
+            region={location} // Usar region en lugar de initialRegion
             showsUserLocation={true}
-            showsMyLocationButton={true}
+            showsMyLocationButton={true} // Mostrar botón para centrar la ubicación
           >
             {/* Renderizar los marcadores de puntos de comida */}
             {foodPoints.map((point) => (
@@ -96,7 +99,7 @@ export default function HomeScreen() {
             ))}
           </MapView>
         ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText>
+          <ThemedText>No se pudo obtener la ubicación</ThemedText> // Mensaje en caso de fallo
         )}
       </View>
     </ParallaxScrollView>
@@ -119,12 +122,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   mapContainer: {
-    height: 400,
-    marginHorizontal: 16,
-    borderRadius: 10,
-    overflow: 'hidden',
+    height: 400, // Altura fija para el mapa
+    marginHorizontal: 16, // Márgenes para que no toque los bordes
+    borderRadius: 10, // Bordes redondeados opcionales
+    overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
   },
   map: {
-    flex: 1,
+    flex: 1, // Se expande para llenar todo el contenedor
   },
 });
