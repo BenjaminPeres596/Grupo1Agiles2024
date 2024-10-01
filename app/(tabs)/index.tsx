@@ -3,11 +3,11 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 
-// Definir el tipo para el estado de location
+// Definir el tipo para el estado de location y para los puntos de comida
 type LocationType = {
   latitude: number;
   longitude: number;
@@ -15,10 +15,24 @@ type LocationType = {
   longitudeDelta: number;
 } | null;
 
+type FoodPoint = {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
 export default function HomeScreen() {
   // Declarar el estado con el tipo LocationType
   const [location, setLocation] = useState<LocationType>(null);
   const [loading, setLoading] = useState(true); // Estado para manejar el indicador de carga
+
+  // Lista de puntos de comida
+  const foodPoints: FoodPoint[] = [
+    { id: 1, name: 'La Cabrera Al Paso Baxar Mercado', latitude: -34.9138048884854, longitude: -57.94808435414168 },
+    { id: 2, name: 'Green Garden - La Plata', latitude: -34.91801012714514, longitude: -57.95458602885797 },
+    { id: 3, name: 'La Trattoria Cucina Caffe', latitude: -34.91575797594942, longitude: -57.95510101289757 },
+  ];
 
   useEffect(() => {
     (async () => {
@@ -71,7 +85,19 @@ export default function HomeScreen() {
             region={location} // Usar region en lugar de initialRegion
             showsUserLocation={true}
             showsMyLocationButton={true} // Mostrar botón para centrar la ubicación
-          />
+          >
+            {/* Renderizar los marcadores de puntos de comida */}
+            {foodPoints.map((point) => (
+              <Marker
+                key={point.id}
+                coordinate={{
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                }}
+                title={point.name}
+              />
+            ))}
+          </MapView>
         ) : (
           <ThemedText>No se pudo obtener la ubicación</ThemedText> // Mensaje en caso de fallo
         )}
