@@ -1,4 +1,4 @@
-import { Image, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { Image, StyleSheet, View, ActivityIndicator, FlatList } from 'react-native';
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -6,6 +6,14 @@ import { ThemedView } from '@/components/ThemedView';
 import MapView from 'react-native-maps';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
+
+// Definir el tipo para los restaurantes
+type Restaurant = {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+};
 
 // Definir el tipo para el estado de location
 type LocationType = {
@@ -15,34 +23,72 @@ type LocationType = {
   longitudeDelta: number;
 } | null;
 
+// Simular una lista de restaurantes
+const restaurants: Restaurant[] = [
+  { id: 1, name: 'Restaurante A', latitude: -34.9164987, longitude: -57.9560722 },
+  { id: 2, name: 'Restaurante B', latitude: -34.9164986, longitude: -57.9560721 },
+  { id: 3, name: 'Restaurante C', latitude: -34.9164985, longitude: -57.9560720 },
+  // Agrega más restaurantes aquí...
+];
+
+// Función para calcular la distancia
+const haversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Radio de la Tierra en kilómetros
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distancia en kilómetros
+};
+
 export default function HomeScreen() {
-  // Declarar el estado con el tipo LocationType
   const [location, setLocation] = useState<LocationType>(null);
-  const [loading, setLoading] = useState(true); // Estado para manejar el indicador de carga
+  const [loading, setLoading] = useState(true);
+  const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]); // Usar el tipo Restaurant
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.log('Permission to access location was denied');
-        setLoading(false); // Dejar de cargar si no se concede el permiso
+        setLoading(false);
         return;
       }
 
       try {
         let currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest, // Mayor precisión
+          accuracy: Location.Accuracy.Highest,
         });
+
+        const userLatitude = currentLocation.coords.latitude;
+        const userLongitude = currentLocation.coords.longitude;
+
+        // Filtrar restaurantes
+        const filteredRestaurants = restaurants.filter(restaurant => {
+          const distance = haversine(
+            userLatitude,
+            userLongitude,
+            restaurant.latitude,
+            restaurant.longitude
+          );
+          return distance <= 1; // 1 km
+        });
+
+        setNearbyRestaurants(filteredRestaurants); // Guardar restaurantes cercanos en el estado
+
         setLocation({
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
+          latitude: userLatitude,
+          longitude: userLongitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         });
       } catch (error) {
         console.error('Error obteniendo la ubicación:', error);
       } finally {
-        setLoading(false); // Dejar de cargar cuando se obtenga la ubicación o si falla
+        setLoading(false);
       }
     })();
   }, []);
@@ -56,27 +102,42 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
-      {/* Título y saludo */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
       </ThemedView>
 
-      {/* Mapa de Google Maps */}
       <View style={styles.mapContainer}>
         {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" /> // Indicador de carga
+          <ActivityIndicator size="large" color="#0000ff" />
         ) : location ? (
           <MapView
             style={styles.map}
-            region={location} // Usar region en lugar de initialRegion
+            region={location}
             showsUserLocation={true}
-            showsMyLocationButton={true} // Mostrar botón para centrar la ubicación
+            showsMyLocationButton={true}
           />
         ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText> // Mensaje en caso de fallo
+          <ThemedText>No se pudo obtener la ubicación</ThemedText>
         )}
       </View>
+
+      {/* Lista de restaurantes cercanos */}
+      <ThemedView style={styles.restaurantsContainer}>
+        <ThemedText type="title">Restaurantes cercanos:</ThemedText>
+        {nearbyRestaurants.length > 0 ? (
+          <FlatList
+            data={nearbyRestaurants}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <ThemedText>{item.name}</ThemedText>
+            )}
+          />
+        ) : (
+          <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
+        )}
+      </ThemedView>
     </ParallaxScrollView>
+    
   );
 }
 
@@ -96,12 +157,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   mapContainer: {
-    height: 400, // Altura fija para el mapa
-    marginHorizontal: 16, // Márgenes para que no toque los bordes
-    borderRadius: 10, // Bordes redondeados opcionales
-    overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
+    height: 400,
+    marginHorizontal: 16,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   map: {
-    flex: 1, // Se expande para llenar todo el contenedor
+    flex: 1,
+  },
+  restaurantsContainer: {
+    padding: 16,
   },
 });
