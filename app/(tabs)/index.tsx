@@ -3,19 +3,11 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 
-// Definir el tipo para los restaurantes
-type Restaurant = {
-  id: number;
-  name: string;
-  latitude: number;
-  longitude: number;
-};
-
-// Definir el tipo para el estado de location
+// Definir el tipo para el estado de location y para los puntos de comida
 type LocationType = {
   latitude: number;
   longitude: number;
@@ -23,31 +15,37 @@ type LocationType = {
   longitudeDelta: number;
 } | null;
 
-// Simular una lista de restaurantes
-const restaurants: Restaurant[] = [
-  { id: 1, name: 'Restaurante A', latitude: -34.9164987, longitude: -57.9560722 },
-  { id: 2, name: 'Restaurante B', latitude: -34.9164986, longitude: -57.9560721 },
-  { id: 3, name: 'Restaurante C', latitude: -34.9164985, longitude: -57.9560720 },
-  // Agrega más restaurantes aquí...
-];
-
-// Función para calcular la distancia
-const haversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371; // Radio de la Tierra en kilómetros
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distancia en kilómetros
+type FoodPoint = {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
 };
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<LocationType>(null);
   const [loading, setLoading] = useState(true);
-  const [nearbyRestaurants, setNearbyRestaurants] = useState<Restaurant[]>([]); // Usar el tipo Restaurant
+  const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
+
+  // Lista de puntos de comida
+  const foodPoints: FoodPoint[] = [
+    { id: 1, name: 'La Cabrera Al Paso Baxar Mercado', latitude: -34.9138048884854, longitude: -57.94808435414168 },
+    { id: 2, name: 'Green Garden - La Plata', latitude: -34.91801012714514, longitude: -57.95458602885797 },
+    { id: 3, name: 'La Trattoria Cucina Caffe', latitude: -34.91575797594942, longitude: -57.95510101289757 },
+  ];
+
+  // Función para calcular la distancia
+  const haversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radio de la Tierra en kilómetros
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distancia en kilómetros
+  };
 
   useEffect(() => {
     (async () => {
@@ -62,23 +60,21 @@ export default function HomeScreen() {
         let currentLocation = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Highest,
         });
-
         const userLatitude = currentLocation.coords.latitude;
         const userLongitude = currentLocation.coords.longitude;
 
-        // Filtrar restaurantes
-        const filteredRestaurants = restaurants.filter(restaurant => {
+        // Filtrar restaurantes cercanos (radio de 1 km)
+        const filteredRestaurants = foodPoints.filter((restaurant) => {
           const distance = haversine(
             userLatitude,
             userLongitude,
             restaurant.latitude,
             restaurant.longitude
           );
-          return distance <= 1; // 1 km
+          return distance <= 1;
         });
 
-        setNearbyRestaurants(filteredRestaurants); // Guardar restaurantes cercanos en el estado
-
+        setNearbyRestaurants(filteredRestaurants);
         setLocation({
           latitude: userLatitude,
           longitude: userLongitude,
@@ -102,10 +98,13 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
+      
+      {/* Título y saludo */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
       </ThemedView>
 
+      {/* Mapa */}
       <View style={styles.mapContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
@@ -115,7 +114,18 @@ export default function HomeScreen() {
             region={location}
             showsUserLocation={true}
             showsMyLocationButton={true}
-          />
+          >
+            {foodPoints.map((point) => (
+              <Marker
+                key={point.id}
+                coordinate={{
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                }}
+                title={point.name}
+              />
+            ))}
+          </MapView>
         ) : (
           <ThemedText>No se pudo obtener la ubicación</ThemedText>
         )}
@@ -137,7 +147,6 @@ export default function HomeScreen() {
         )}
       </ThemedView>
     </ParallaxScrollView>
-    
   );
 }
 
@@ -145,7 +154,6 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
     marginVertical: 16,
     paddingHorizontal: 16,
   },
