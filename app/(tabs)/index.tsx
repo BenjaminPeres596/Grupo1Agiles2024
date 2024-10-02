@@ -3,6 +3,8 @@ import MapView, { Marker } from 'react-native-maps';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import Header from '../../components/Header';
+import { ThemedText } from '../../components/ThemedText'; 
+
 
 // Definir el tipo para el estado de location y para los puntos de comida
 type LocationType = {
@@ -60,7 +62,11 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Header/>  {/* Nuevo header importado */}
+        <Header 
+          title="DondeComo" // Título del header
+          onProfilePress={() => console.log('Perfil presionado')} // Preparo ya para un proximo sprint la accion de este boton
+          onSearchPress={() => console.log('Búsqueda presionada')} // Preparo ya para un proximo sprint la accion de este boton
+        />
       {/* Mapa de Google Maps */}
       <View style={styles.mapContainer}>
         {loading ? (
