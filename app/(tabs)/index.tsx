@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, // Márgenes para que no toque los bordes
     borderRadius: 10, // Bordes redondeados opcionales
     overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
+    paddingTop: 16, // Agrego un espacio entre el header y el mapa.
   },
   map: {
     flex: 1, // Se expande para llenar todo el contenedor
