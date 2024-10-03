@@ -33,9 +33,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#EF4423', // Color rojo del header
-    height: 60,
+    height: 90,
     paddingHorizontal: 16,
-    paddingTop: 10,
+    marginTop: 0,
+    paddingTop: 25,
   },
   title: {
     fontSize: 20,
