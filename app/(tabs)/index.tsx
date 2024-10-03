@@ -32,6 +32,8 @@ export default function HomeScreen() {
     { id: 1, name: 'La Cabrera Al Paso Baxar Mercado', latitude: -34.9138048884854, longitude: -57.94808435414168 },
     { id: 2, name: 'Green Garden - La Plata', latitude: -34.91801012714514, longitude: -57.95458602885797 },
     { id: 3, name: 'La Trattoria Cucina Caffe', latitude: -34.91575797594942, longitude: -57.95510101289757 },
+    { id: 1, name: "Atenas Parrilla Resto", latitude: -34.92476621004759, longitude: -57.949965283708394 },
+
   ];
 
   // Función para calcular la distancia
