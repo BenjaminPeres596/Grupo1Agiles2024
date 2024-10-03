@@ -1,4 +1,4 @@
-import { Image, StyleSheet, View, ActivityIndicator } from 'react-native';
+import { Image, StyleSheet, View, ActivityIndicator, FlatList } from 'react-native';
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -23,40 +23,70 @@ type FoodPoint = {
 };
 
 export default function HomeScreen() {
-  // Declarar el estado con el tipo LocationType
   const [location, setLocation] = useState<LocationType>(null);
-  const [loading, setLoading] = useState(true); // Estado para manejar el indicador de carga
+  const [loading, setLoading] = useState(true);
+  const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
 
   // Lista de puntos de comida
   const foodPoints: FoodPoint[] = [
     { id: 1, name: 'La Cabrera Al Paso Baxar Mercado', latitude: -34.9138048884854, longitude: -57.94808435414168 },
     { id: 2, name: 'Green Garden - La Plata', latitude: -34.91801012714514, longitude: -57.95458602885797 },
     { id: 3, name: 'La Trattoria Cucina Caffe', latitude: -34.91575797594942, longitude: -57.95510101289757 },
+    { id: 1, name: "Atenas Parrilla Resto", latitude: -34.92476621004759, longitude: -57.949965283708394 },
+
   ];
+
+  // Función para calcular la distancia
+  const haversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radio de la Tierra en kilómetros
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distancia en kilómetros
+  };
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.log('Permission to access location was denied');
-        setLoading(false); // Dejar de cargar si no se concede el permiso
+        setLoading(false);
         return;
       }
 
       try {
         let currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest, // Mayor precisión
+          accuracy: Location.Accuracy.Highest,
         });
+        const userLatitude = currentLocation.coords.latitude;
+        const userLongitude = currentLocation.coords.longitude;
+
+        // Filtrar restaurantes cercanos (radio de 1 km)
+        const filteredRestaurants = foodPoints.filter((restaurant) => {
+          const distance = haversine(
+            userLatitude,
+            userLongitude,
+            restaurant.latitude,
+            restaurant.longitude
+          );
+          return distance <= 1;
+        });
+
+        setNearbyRestaurants(filteredRestaurants);
         setLocation({
-          latitude: currentLocation.coords.latitude,
-          longitude: currentLocation.coords.longitude,
+          latitude: userLatitude,
+          longitude: userLongitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         });
       } catch (error) {
         console.error('Error obteniendo la ubicación:', error);
       } finally {
-        setLoading(false); // Dejar de cargar cuando se obtenga la ubicación o si falla
+        setLoading(false);
       }
     })();
   }, []);
@@ -70,23 +100,23 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
+      
       {/* Título y saludo */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
       </ThemedView>
 
-      {/* Mapa de Google Maps */}
+      {/* Mapa */}
       <View style={styles.mapContainer}>
         {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" /> // Indicador de carga
+          <ActivityIndicator size="large" color="#0000ff" />
         ) : location ? (
           <MapView
             style={styles.map}
-            region={location} // Usar region en lugar de initialRegion
+            region={location}
             showsUserLocation={true}
-            showsMyLocationButton={true} // Mostrar botón para centrar la ubicación
+            showsMyLocationButton={true}
           >
-            {/* Renderizar los marcadores de puntos de comida */}
             {foodPoints.map((point) => (
               <Marker
                 key={point.id}
@@ -99,9 +129,25 @@ export default function HomeScreen() {
             ))}
           </MapView>
         ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText> // Mensaje en caso de fallo
+          <ThemedText>No se pudo obtener la ubicación</ThemedText>
         )}
       </View>
+
+      {/* Lista de restaurantes cercanos */}
+      <ThemedView style={styles.restaurantsContainer}>
+        <ThemedText type="title">Restaurantes cercanos:</ThemedText>
+        {nearbyRestaurants.length > 0 ? (
+          <FlatList
+            data={nearbyRestaurants}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <ThemedText>{item.name}</ThemedText>
+            )}
+          />
+        ) : (
+          <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
+        )}
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
@@ -110,7 +156,6 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
     marginVertical: 16,
     paddingHorizontal: 16,
   },
@@ -122,12 +167,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   mapContainer: {
-    height: 400, // Altura fija para el mapa
-    marginHorizontal: 16, // Márgenes para que no toque los bordes
-    borderRadius: 10, // Bordes redondeados opcionales
-    overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
+    height: 400,
+    marginHorizontal: 16,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   map: {
-    flex: 1, // Se expande para llenar todo el contenedor
+    flex: 1,
+  },
+  restaurantsContainer: {
+    padding: 16,
   },
 });
