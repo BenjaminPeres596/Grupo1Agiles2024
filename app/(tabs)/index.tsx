@@ -12,6 +12,7 @@ import { ThemedView } from "@/components/ThemedView";
 import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect } from "react";
 import * as Location from "expo-location";
+import { Pressable } from 'react-native'
 
 // Definir el tipo para el estado de location y para los puntos de comida
 // LocationType define el tipo de objeto que guarda las coordenadas de ubicación
@@ -62,9 +63,9 @@ export default function HomeScreen() {
     },
     {
       id: 4,
-      name: "Atenas Parrilla Resto",
-      latitude: -34.92476621004759,
-      longitude: -57.949965283708394,
+      name: "Afan en la cuadra",
+        latitude: -34.91081037947414,
+        longitude: -57.94575454132004,
     },
     {
       id: 5,
@@ -73,7 +74,7 @@ export default function HomeScreen() {
       longitude: -57.924194197557235,
     },
   ];
-
+  
   // Función para calcular la distancia entre dos puntos usando la fórmula de Haversine
   const haversine = (
     lat1: number,
@@ -180,24 +181,45 @@ export default function HomeScreen() {
           // Mensaje si no se obtiene la ubicación
         )}
       </View>
+          {/* Lista de restaurantes cercanos */}
+          <ThemedView style={styles.restaurantsContainer}>
+              <ThemedText type="title" style={styles.listTitle}>
+                  Restaurantes cercanos
+              </ThemedText>
 
-      {/* Lista de restaurantes cercanos */}
-      <ThemedView style={styles.restaurantsContainer}>
-        <ThemedText type="title">Restaurantes cercanos:</ThemedText>
-        {/* Título de la lista */}
-        {nearbyRestaurants.length > 0 ? (
-          <FlatList
-            data={nearbyRestaurants} // Datos de los restaurantes cercanos
-            keyExtractor={(item) => item.id.toString()} // Convierte el id a string para usarlo como clave
-            renderItem={({ item }) => (
-              <ThemedText>{item.name}</ThemedText> // Renderiza el nombre del restaurante
-            )}
-          />
-        ) : (
-          <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
-          // Mensaje si no hay restaurantes cercanos
-        )}
-      </ThemedView>
+              {nearbyRestaurants.length === 0 ? (
+                  <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
+              ) : (
+                  <FlatList
+                      data={nearbyRestaurants}
+                      keyExtractor={(item) => item.id.toString()}
+                      renderItem={({ item }) => (
+                          <Pressable
+                              onPressIn={() => setLocation({
+                                  latitude: item.latitude,
+                                  longitude: item.longitude,
+                                  latitudeDelta: 0.005,
+                                  longitudeDelta: 0.005,
+                              })}
+                              style={({ pressed }) => [
+                                  styles.restaurantCard,
+                                  pressed && styles.pressedCard, // Estilo adicional cuando se presiona
+                              ]}
+                          >
+                              <Image
+                                  source={require("@/assets/images/restaurant-placeholder.png")}
+                                  style={styles.restaurantImage}
+                              />
+                              <View style={styles.restaurantInfo}>
+                                  <ThemedText type="subtitle" style={styles.restaurantName}>
+                                      {item.name}
+                                  </ThemedText>
+                              </View>
+                          </Pressable>
+                      )}
+                  />
+              )}
+          </ThemedView>
     </ParallaxScrollView>
   );
 }
@@ -226,6 +248,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   restaurantsContainer: {
-    padding: 16,
-  },
+        padding: 16,
+    },
+  listTitle: {
+      marginBottom: 10,
+      fontSize: 24, // Tamaño de fuente
+     },
+  restaurantCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        padding: 10,
+        borderRadius: 8,
+        marginVertical: 8,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 3, 
+    },
+  restaurantImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 12,
+    },
+  restaurantInfo: {
+        flex: 1,
+    },
+  restaurantName: {
+      color: '#000', // Define el color negro
+      fontSize: 16, // Tamaño de fuente
+      marginVertical: 8, 
+    },
+  pressedCard: {
+        backgroundColor: '#e0e0e0', // Cambia el color al presionar
+    },
 });
