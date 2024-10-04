@@ -7,12 +7,13 @@ import {
   Pressable,
   Modal,
   Text,
+  ScrollView,
 } from "react-native";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import MapView, { Marker } from "react-native-maps";
-import { useState, useEffect, useRef, forwardRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
 
 // Definir el tipo para el estado de location y para los puntos de comida
@@ -46,8 +47,9 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
 
-  // Referencia a Parallax
+  // Referencia a Parallax y ScrollView
   const parallaxScrollViewRef = useRef<any>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Aquí agregamos los restaurantes adicionales
   const additionalRestaurants: FoodPoint[] = [
@@ -82,7 +84,7 @@ export default function HomeScreen() {
       longitude: -57.924194197557235,
     },
   ];
-  
+
   // Función para calcular la distancia entre dos puntos usando la fórmula de Haversine
   const haversine = (
     lat1: number,
@@ -200,132 +202,127 @@ export default function HomeScreen() {
     setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
   };
 
+  // Función para desplazarse hacia arriba
+  const scrollToTop = () => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: true });
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }} // Estilo del encabezado
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")} // Logo en el encabezado
-          style={styles.reactLogo}
-        />
-      }
-    >
-      {/* Título y saludo */}
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
-      </ThemedView>
-
-      <View style={styles.mapContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : location ? (
-          <MapView
-            style={styles.map}
-            region={location} // Región centrada en la ubicación del usuario
-            showsUserLocation={true} // Muestra el icono de la ubicación del usuario
-            showsMyLocationButton={true} // Botón para centrar en la ubicación del usuario
-          >
-            {/* Marcadores de los puntos de comida */}
-            {nearbyRestaurants.map((restaurant) => (
-              <Marker
-                key={restaurant.id} // Cada marcador necesita una clave única
-                coordinate={{
-                  latitude: restaurant.latitude,
-                  longitude: restaurant.longitude,
-                }}
-                title={restaurant.name} // Nombre del restaurante como título del marcador
-                onPress={() => {
-                  setSelectedRestaurant(restaurant);
-                  setModalVisible(true); // Muestra el modal al presionar el marcador
-                }}
-              />
-            ))}
-
-            {/* Marcadores de los restaurantes adicionales */}
-            {additionalRestaurants.map((restaurant) => (
-              <Marker
-                key={restaurant.id} // Cada marcador necesita una clave única
-                coordinate={{
-                  latitude: restaurant.latitude,
-                  longitude: restaurant.longitude,
-                }}
-                title={restaurant.name} // Nombre del restaurante como título del marcador
-                onPress={() => {
-                  setSelectedRestaurant(restaurant);
-                  setModalVisible(true); // Muestra el modal al presionar el marcador
-                }}
-              />
-            ))}
-          </MapView>
-        ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText>
-        )}
-      </View>
-
-      {/* Lista de restaurantes cercanos */}
-      <ThemedView style={styles.restaurantsContainer}>
-        <ThemedText type="title" style={styles.listTitle}>
-          Restaurantes cercanos
-        </ThemedText>
-        {nearbyRestaurants.length === 0 ? (
-          <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
-        ) : (
-          <FlatList
-            data={[...nearbyRestaurants, ...additionalRestaurants]}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <Pressable
-                onPressIn={() => {
-                  setLocation({
-                    latitude: item.latitude,
-                    longitude: item.longitude,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005,
-                }),
-                  setSelectedRestaurant(item); // Establece el restaurante seleccionado
-                  setModalVisible(true); // Muestra el modal al presionar el restaurante
-                }}
-                style={({ pressed }) => [
-                  styles.restaurantCard,
-                  pressed && styles.pressedCard, // Estilo adicional cuando se presiona
-                ]}
-              >
-                <Image
-                  source={require("@/assets/images/restaurant-placeholder.png")}
-                  style={styles.restaurantImage}
-                />
-                <View style={styles.restaurantInfo}>
-                  <ThemedText type="subtitle" style={styles.restaurantName}>
-                    {item.name}
-                  </ThemedText>
-                </View>
-              </Pressable>
-            )}
+    <ScrollView ref={scrollViewRef}>
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }} // Estilo del encabezado
+        headerImage={
+          <Image
+            source={require("@/assets/images/partial-react-logo.png")} // Logo en el encabezado
+            style={styles.reactLogo}
           />
-        )}
-      </ThemedView>
-
-      {/* Modal para mostrar detalles del restaurante */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
+        }
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {selectedRestaurant && (
-              <>
-                <Text style={styles.modalTitle}>{selectedRestaurant.name}</Text>
-                <Pressable style={styles.closeButton} onPress={closeModal}>
-                  <Text style={styles.closeButtonText}>Cerrar</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
+        {/* Título y saludo */}
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
+        </ThemedView>
+
+        <View style={styles.mapContainer}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : location ? (
+            <MapView
+              style={styles.map}
+              region={location} // Región centrada en la ubicación del usuario
+            >
+              {/* Marcadores de los restaurantes */}
+              {[...nearbyRestaurants, ...additionalRestaurants].map(
+                (restaurant) => (
+                  <Marker
+                    key={restaurant.id}
+                    coordinate={{
+                      latitude: restaurant.latitude,
+                      longitude: restaurant.longitude,
+                    }}
+                    title={restaurant.name}
+                    description="Restaurante sin gluten"
+                  />
+                )
+              )}
+            </MapView>
+          ) : (
+            <ThemedText>No se pudo obtener la ubicación</ThemedText>
+          )}
         </View>
-      </Modal>
-    </ParallaxScrollView>
+
+        {/* Lista de restaurantes cercanos */}
+        <ThemedView style={styles.restaurantsContainer}>
+          <ThemedText type="title" style={styles.listTitle}>
+            Restaurantes cercanos
+          </ThemedText>
+          {nearbyRestaurants.length === 0 ? (
+            <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
+          ) : (
+            <FlatList
+              data={[...nearbyRestaurants, ...additionalRestaurants]}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    setLocation({
+                      latitude: item.latitude,
+                      longitude: item.longitude,
+                      latitudeDelta: 0.005,
+                      longitudeDelta: 0.005,
+                    });
+                    setSelectedRestaurant(item); // Establece el restaurante seleccionado
+                    setModalVisible(true); // Muestra el modal
+                    scrollToTop(); // Desplaza hacia el inicio
+                  }}
+                  style={({ pressed }) => [
+                    styles.restaurantCard,
+                    pressed && styles.pressedCard,
+                  ]}
+                >
+                  <Image
+                    source={require("@/assets/images/restaurant-placeholder.png")}
+                    style={styles.restaurantImage}
+                  />
+                  <View style={styles.restaurantInfo}>
+                    <ThemedText type="subtitle" style={styles.restaurantName}>
+                      {item.name}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              )}
+              onEndReached={loadMoreRestaurants} // Cargar más restaurantes al llegar al final
+              onEndReachedThreshold={0.5}
+            />
+          )}
+        </ThemedView>
+
+        {/* Modal para mostrar detalles del restaurante */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {selectedRestaurant && (
+                <>
+                  <Text style={styles.modalTitle}>
+                    {selectedRestaurant.name}
+                  </Text>
+                  <Pressable style={styles.closeButton} onPress={closeModal}>
+                    <Text style={styles.closeButtonText}>Cerrar</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
+      </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
