@@ -15,9 +15,9 @@ import { ThemedView } from "@/components/ThemedView";
 import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
-import Header from '@/components/Header';
+import Header from "@/components/Header";
 
-// Definir el tipo para representar la ubicacion del usuario
+// Definir el tipo para representar la ubicación del usuario
 type LocationType = {
   latitude: number;
   longitude: number;
@@ -42,8 +42,8 @@ export default function HomeScreen() {
 
   // Estado para almacenar los restaurantes cercanos al usuario
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
-  // Al momento de realizar una llamada a la API de Google Places te retorna una lista de restaurantes (en este caso) y si hay mas de cierta cantidad
-  // Entonces lo que hace google es usar un token para mostrarlos en una pagina siguiente
+  // Al momento de realizar una llamada a la API de Google Places te retorna una lista de restaurantes (en este caso) y si hay más de cierta cantidad
+  // Entonces lo que hace google es usar un token para mostrarlos en una página siguiente
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
   // Estado para el modal
@@ -130,7 +130,7 @@ export default function HomeScreen() {
 
         // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev)
         // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants)
-        // Finalmente se devuelve una nueva lista con todos los erstaurantes juntos
+        // Finalmente se devuelve una nueva lista con todos los restaurantes juntos
         setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
         setNextPageToken(data.next_page_token || null); // Guardamos el token de la siguiente página
       } else {
@@ -176,9 +176,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync(); // Solicitamos permiso de ubicacion al celular
+      let { status } = await Location.requestForegroundPermissionsAsync(); // Solicitamos permiso de ubicación al celular
       if (status !== "granted") {
-        console.log("Permiso de ubicacion denegado.");
+        console.log("Permiso de ubicación denegado.");
         setLoading(false);
         return;
       }
@@ -222,109 +222,22 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-        <Header 
-          title="DondeComo" // Título del header
-          onProfilePress={() => console.log('Perfil presionado')} // Preparo ya para un proximo sprint la accion de este boton
-          onSearchPress={() => console.log('Búsqueda presionada')} // Preparo ya para un proximo sprint la accion de este boton
-        />
-      {/* Mapa de Google Maps */}
-      <View style={styles.mapContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : // Indicador de carga mientras se obtiene la ubicación
-        location ? (
-          <MapView
-            style={styles.map}
-            region={location} // Región centrada en la ubicación del usuario
-            showsUserLocation={true} // Muestra el icono de la ubicación del usuario
-            showsMyLocationButton={true} // Botón para centrar en la ubicación del usuario
-          >
-            {/* Marcadores de los puntos de comida */}
-            {foodPoints.map((point) => (
-              <Marker
-                key={point.id} // Cada marcador necesita una clave única
-                coordinate={{
-                  latitude: point.latitude,
-                  longitude: point.longitude,
-                }}
-                title={point.name} // Nombre del restaurante como título del marcador
-              />
-            ))}
-          </MapView>
-        ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText>
-          // Mensaje si no se obtiene la ubicación
-        )}
-      </View>
-          {/* Lista de restaurantes cercanos */}
-          <ThemedView style={styles.restaurantsContainer}>
-              <ThemedText type="title" style={styles.listTitle}>
-                  Restaurantes cercanos
-              </ThemedText>
+      <Header
+        title="DondeComo"
+        onProfilePress={() => console.log("Perfil presionado")}
+        onSearchPress={() => console.log("Búsqueda presionada")}
+      />
 
-              {nearbyRestaurants.length === 0 ? (
-                  <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
-              ) : (
-                  <FlatList
-                      data={nearbyRestaurants}
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                          <Pressable
-                              onPressIn={() => setLocation({
-                                  latitude: item.latitude,
-                                  longitude: item.longitude,
-                                  latitudeDelta: 0.005,
-                                  longitudeDelta: 0.005,
-                              })}
-                              style={({ pressed }) => [
-                                  styles.restaurantCard,
-                                  pressed && styles.pressedCard, // Estilo adicional cuando se presiona
-                              ]}
-                          >
-                              <Image
-                                  source={require("@/assets/images/restaurant-placeholder.png")}
-                                  style={styles.restaurantImage}
-                              />
-                              <View style={styles.restaurantInfo}>
-                                  <ThemedText type="subtitle" style={styles.restaurantName}>
-                                      {item.name}
-                                  </ThemedText>
-                              </View>
-                          </Pressable>
-                      )}
-                  />
-              )}
-          </ThemedView>
-    </View>
-    <ScrollView ref={scrollViewRef}>
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }} // Estilo del encabezado
-        headerImage={
-          <Image
-            source={require("@/assets/images/partial-react-logo.png")} // Logo en el encabezado
-            style={styles.reactLogo}
-          />
-        }
-      >
-        {/* Título y saludo */}
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
-        </ThemedView>
-
+      <ScrollView ref={scrollViewRef}>
         <View style={styles.mapContainer}>
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : location ? (
-            <MapView
-              style={styles.map}
-              region={location} // Región centrada en la ubicación del usuario
-            >
-              {/* Marcadores de los restaurantes */}
+            <MapView style={styles.map} region={location}>
               {[...nearbyRestaurants, ...additionalRestaurants].map(
-                //Juntamos los restaurantes cercanos a nosotros junto a los que añadimos nosotros
                 (restaurant) => (
                   <Marker
-                    key={restaurant.id}
+                    key={`restaurant-${restaurant.id}`} // Ensure unique keys by prefixing the ID
                     coordinate={{
                       latitude: restaurant.latitude,
                       longitude: restaurant.longitude,
@@ -340,7 +253,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Lista de restaurantes cercanos */}
         <ThemedView style={styles.restaurantsContainer}>
           <ThemedText type="title" style={styles.listTitle}>
             Restaurantes cercanos
@@ -360,9 +272,9 @@ export default function HomeScreen() {
                       latitudeDelta: 0.005,
                       longitudeDelta: 0.005,
                     });
-                    setSelectedRestaurant(item); // Establece el restaurante seleccionado
-                    setModalVisible(true); // Muestra el modal
-                    scrollToTop(); // Desplaza hacia el inicio
+                    setSelectedRestaurant(item);
+                    setModalVisible(true);
+                    scrollToTop();
                   }}
                   style={({ pressed }) => [
                     styles.restaurantCard,
@@ -380,13 +292,12 @@ export default function HomeScreen() {
                   </View>
                 </Pressable>
               )}
-              onEndReached={loadMoreRestaurants} // Cargar más restaurantes al llegar al final
+              onEndReached={loadMoreRestaurants}
               onEndReachedThreshold={0.5}
             />
           )}
         </ThemedView>
 
-        {/* Modal para mostrar detalles del restaurante */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -408,90 +319,87 @@ export default function HomeScreen() {
             </View>
           </View>
         </Modal>
-      </ParallaxScrollView>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
+// Definición de estilos
 const styles = StyleSheet.create({
   titleContainer: {
-    padding: 10,
+    padding: 16,
   },
   mapContainer: {
-    height: 400, // Altura fija para el mapa
-    marginHorizontal: 16, // Márgenes para que no toque los bordes
-    borderRadius: 10, // Bordes redondeados opcionales
-    overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
-    paddingTop: 16, // Agrego un espacio entre el header y el mapa.
+    height: 400,
+    marginVertical: 16,
   },
   map: {
     flex: 1,
-  },
-  reactLogo: {
-    width: "100%",
-    height: 200,
-    resizeMode: "contain",
+    height: "100%",
   },
   restaurantsContainer: {
-    marginVertical: 20,
+    padding: 16,
   },
   listTitle: {
     marginBottom: 10,
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 24, // Tamaño de fuente
   },
   restaurantCard: {
     flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 10,
-    backgroundColor: "#f9f9f9",
-    marginVertical: 5,
-    borderRadius: 5,
+    borderRadius: 8,
     marginVertical: 8,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
-    elevation: 3, 
-  },
-  pressedCard: {
-    backgroundColor: "#e0e0e0",
+    elevation: 3,
   },
   restaurantImage: {
     width: 50,
     height: 50,
-    borderRadius: 5,
-    marginRight: 10,
+    borderRadius: 25,
+    marginRight: 12,
   },
   restaurantInfo: {
-    justifyContent: "center",
+    flex: 1,
   },
   restaurantName: {
-    fontSize: 16,
+    color: "#000", // Define el color negro
+    fontSize: 16, // Tamaño de fuente
+    marginVertical: 8,
+  },
+  pressedCard: {
+    backgroundColor: "#e0e0e0", // Cambia el color al presionar
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semi-transparente
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
     width: 300,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 8,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 16,
   },
   closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#007BFF",
-    borderRadius: 5,
+    marginTop: 16,
+    padding: 8,
+    backgroundColor: "#007bff",
+    borderRadius: 8,
+    alignItems: "center",
   },
   closeButtonText: {
-    color: "white",
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
