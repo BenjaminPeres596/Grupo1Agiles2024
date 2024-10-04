@@ -1,13 +1,21 @@
-import { Image, StyleSheet, View, ActivityIndicator, FlatList } from 'react-native';
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import MapView, { Marker } from 'react-native-maps';
-import { useState, useEffect } from 'react';
-import * as Location from 'expo-location';
-import Header from '../../components/Header';
+import {
+  Image,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Modal,
+  Text,
+} from "react-native";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import MapView, { Marker } from "react-native-maps";
+import { useState, useEffect, useRef, forwardRef } from "react";
+import * as Location from "expo-location";
 
+// Definir el tipo para el estado de location y para los puntos de comida
 type LocationType = {
   latitude: number;
   longitude: number;
@@ -15,6 +23,7 @@ type LocationType = {
   longitudeDelta: number;
 } | null;
 
+// Definición del tipo para representar puntos de comida (restaurantes)
 type FoodPoint = {
   id: number;
   name: string;
@@ -23,30 +32,140 @@ type FoodPoint = {
 };
 
 export default function HomeScreen() {
+  // Estado para almacenar la ubicación actual del usuario
   const [location, setLocation] = useState<LocationType>(null);
+
+  // Estado para gestionar el estado de carga
   const [loading, setLoading] = useState(true);
+
+  // Estado para almacenar los restaurantes cercanos al usuario
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Función para calcular la distancia (opcional)
-  const haversine = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
+  // Estado para el modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
+
+  // Referencia a Parallax
+  const parallaxScrollViewRef = useRef<any>(null);
+
+  // Aquí agregamos los restaurantes adicionales
+  const additionalRestaurants: FoodPoint[] = [
+    {
+      id: 1,
+      name: "La Cabrera Al Paso Baxar Mercado",
+      latitude: -34.9138048884854,
+      longitude: -57.94808435414168,
+    },
+    {
+      id: 2,
+      name: "Green Garden - La Plata",
+      latitude: -34.91801012714514,
+      longitude: -57.95458602885797,
+    },
+    {
+      id: 3,
+      name: "La Trattoria Cucina Caffe",
+      latitude: -34.91575797594942,
+      longitude: -57.95510101289757,
+    },
+    {
+      id: 4,
+      name: "Afan en la cuadra",
+      latitude: -34.91081037947414,
+      longitude: -57.94575454132004,
+    },
+    {
+      id: 5,
+      name: "Ese es mi pollo",
+      latitude: -34.90639681023369,
+      longitude: -57.924194197557235,
+    },
+  ];
+  
+  // Función para calcular la distancia entre dos puntos usando la fórmula de Haversine
+  const haversine = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // Radio de la Tierra en kilómetros
+    const dLat = (lat2 - lat1) * (Math.PI / 180); // Diferencia de latitud en radianes
+    const dLon = (lon2 - lon1) * (Math.PI / 180); // Diferencia de longitud en radianes
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2); // Fórmula de Haversine
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); // Arco entre los puntos
+    return R * c; // Distancia en kilómetros
+  };
+
+  // Función para obtener restaurantes cercanos
+  const fetchRestaurants = async (latitude: number, longitude: number) => {
+    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Reemplaza con tu API Key
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&type=restaurant&key=${API_KEY}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        // Mapeo de los resultados a nuestro estado de nearbyRestaurants
+        const filteredRestaurants = data.results.map((place: any) => ({
+          id: place.id ? place.id : Math.random(), // Usa el ID único proporcionado por la API o genera uno aleatorio
+          name: place.name,
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+        }));
+
+        setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
+        setNextPageToken(data.next_page_token || null); // Guardamos el token de la siguiente página
+      } else {
+        console.log("No results found");
+      }
+    } catch (error) {
+      console.error("Error fetching restaurants:", error);
+    }
+  };
+
+  // Función para cargar más restaurantes cuando se llega al final de la lista
+  const loadMoreRestaurants = async () => {
+    if (nextPageToken) {
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar un poco antes de hacer la solicitud
+      const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Reemplaza con tu API Key
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${nextPageToken}&key=${API_KEY}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+          const filteredRestaurants = data.results.map((place: any) => ({
+            id: place.id ? place.id : Math.random(), // Usa el ID único proporcionado por la API o genera uno aleatorio
+            name: place.name,
+            latitude: place.geometry.location.lat,
+            longitude: place.geometry.location.lng,
+          }));
+
+          setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
+          setNextPageToken(data.next_page_token || null);
+        } else {
+          console.log("No more results found");
+        }
+      } catch (error) {
+        console.error("Error fetching more restaurants:", error);
+      }
+    }
   };
 
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('Permission to access location was denied');
+      if (status !== "granted") {
+        console.log("Permission to access location was denied");
         setLoading(false);
         return;
       }
@@ -58,76 +177,40 @@ export default function HomeScreen() {
         const userLatitude = currentLocation.coords.latitude;
         const userLongitude = currentLocation.coords.longitude;
 
-        await fetchRestaurants(userLatitude, userLongitude);
-
+        // Establecer la ubicación del usuario
         setLocation({
           latitude: userLatitude,
           longitude: userLongitude,
-          latitudeDelta: 0.0922,
+          latitudeDelta: 0.0922, // Zoom inicial en el mapa
           longitudeDelta: 0.0421,
         });
+
+        // Obtener restaurantes cercanos
+        await fetchRestaurants(userLatitude, userLongitude);
       } catch (error) {
-        console.error('Error obteniendo la ubicación:', error);
+        console.error("Error obteniendo la ubicación:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Una vez que se obtienen los datos, se deja de cargar
       }
     })();
-  }, []);
+  }, []); // Ejecutar el efecto cuando se monta el componente
 
-  const fetchRestaurants = async (latitude: number, longitude: number, pageToken: string | null = null) => {
-    const API_KEY = 'AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE';
-    let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=6000&type=restaurant&key=${API_KEY}`;
-
-    if (pageToken) {
-      url += `&pagetoken=${pageToken}`;
-      setLoadingMore(true); // Muestra un indicador mientras se cargan más resultados
-    }
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.results && data.results.length > 0) {
-        const newRestaurants = data.results.map((place: any, index: number) => ({
-          id: index + nearbyRestaurants.length, // Para mantener los IDs únicos
-          name: place.name,
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-        }));
-
-        setNearbyRestaurants(prevRestaurants => [...prevRestaurants, ...newRestaurants]);
-      }
-
-      // Si hay un next_page_token, lo guardamos para futuras solicitudes
-      if (data.next_page_token) {
-        setNextPageToken(data.next_page_token);
-      } else {
-        setNextPageToken(null); // No más páginas
-      }
-    } catch (error) {
-      console.error('Error obteniendo restaurantes:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  const loadMoreRestaurants = () => {
-    if (nextPageToken && location) {
-      fetchRestaurants(location.latitude, location.longitude, nextPageToken);
-    }
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
   };
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }} // Estilo del encabezado
       headerImage={
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
+          source={require("@/assets/images/partial-react-logo.png")} // Logo en el encabezado
           style={styles.reactLogo}
         />
-      }>
-
+      }
+    >
+      {/* Título y saludo */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
       </ThemedView>
@@ -138,18 +221,39 @@ export default function HomeScreen() {
         ) : location ? (
           <MapView
             style={styles.map}
-            region={location}
-            showsUserLocation={true}
-            showsMyLocationButton={true}
+            region={location} // Región centrada en la ubicación del usuario
+            showsUserLocation={true} // Muestra el icono de la ubicación del usuario
+            showsMyLocationButton={true} // Botón para centrar en la ubicación del usuario
           >
+            {/* Marcadores de los puntos de comida */}
             {nearbyRestaurants.map((restaurant) => (
               <Marker
-                key={restaurant.id}
+                key={restaurant.id} // Cada marcador necesita una clave única
                 coordinate={{
                   latitude: restaurant.latitude,
                   longitude: restaurant.longitude,
                 }}
-                title={restaurant.name}
+                title={restaurant.name} // Nombre del restaurante como título del marcador
+                onPress={() => {
+                  setSelectedRestaurant(restaurant);
+                  setModalVisible(true); // Muestra el modal al presionar el marcador
+                }}
+              />
+            ))}
+
+            {/* Marcadores de los restaurantes adicionales */}
+            {additionalRestaurants.map((restaurant) => (
+              <Marker
+                key={restaurant.id} // Cada marcador necesita una clave única
+                coordinate={{
+                  latitude: restaurant.latitude,
+                  longitude: restaurant.longitude,
+                }}
+                title={restaurant.name} // Nombre del restaurante como título del marcador
+                onPress={() => {
+                  setSelectedRestaurant(restaurant);
+                  setModalVisible(true); // Muestra el modal al presionar el marcador
+                }}
               />
             ))}
           </MapView>
@@ -158,51 +262,142 @@ export default function HomeScreen() {
         )}
       </View>
 
+      {/* Lista de restaurantes cercanos */}
       <ThemedView style={styles.restaurantsContainer}>
-        <ThemedText type="title">Restaurantes cercanos:</ThemedText>
-        {nearbyRestaurants.length > 0 ? (
+        <ThemedText type="title" style={styles.listTitle}>
+          Restaurantes cercanos
+        </ThemedText>
+        {nearbyRestaurants.length === 0 ? (
+          <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
+        ) : (
           <FlatList
-            data={nearbyRestaurants}
+            data={[...nearbyRestaurants, ...additionalRestaurants]}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <ThemedText>{item.name}</ThemedText>
+              <Pressable
+                onPressIn={() => {
+                  setLocation({
+                    latitude: item.latitude,
+                    longitude: item.longitude,
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                }),
+                  setSelectedRestaurant(item); // Establece el restaurante seleccionado
+                  setModalVisible(true); // Muestra el modal al presionar el restaurante
+                }}
+                style={({ pressed }) => [
+                  styles.restaurantCard,
+                  pressed && styles.pressedCard, // Estilo adicional cuando se presiona
+                ]}
+              >
+                <Image
+                  source={require("@/assets/images/restaurant-placeholder.png")}
+                  style={styles.restaurantImage}
+                />
+                <View style={styles.restaurantInfo}>
+                  <ThemedText type="subtitle" style={styles.restaurantName}>
+                    {item.name}
+                  </ThemedText>
+                </View>
+              </Pressable>
             )}
-            onEndReached={loadMoreRestaurants} // Cargar más cuando lleguemos al final de la lista
-            onEndReachedThreshold={0.5} // Cargar cuando estemos al 50% del final
-            ListFooterComponent={loadingMore ? <ActivityIndicator size="large" color="#0000ff" /> : null}
           />
-        ) : (
-          <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
         )}
       </ThemedView>
+
+      {/* Modal para mostrar detalles del restaurante */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            {selectedRestaurant && (
+              <>
+                <Text style={styles.modalTitle}>{selectedRestaurant.name}</Text>
+                <Pressable style={styles.closeButton} onPress={closeModal}>
+                  <Text style={styles.closeButtonText}>Cerrar</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-    paddingHorizontal: 16,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+    padding: 10,
   },
   mapContainer: {
-    height: 400,
-    marginHorizontal: 16,
-    borderRadius: 10,
-    overflow: 'hidden',
+    height: 300,
+    marginVertical: 10,
   },
   map: {
     flex: 1,
   },
+  reactLogo: {
+    width: "100%",
+    height: 200,
+    resizeMode: "contain",
+  },
   restaurantsContainer: {
-    padding: 16,
+    marginVertical: 20,
+  },
+  listTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  restaurantCard: {
+    flexDirection: "row",
+    padding: 10,
+    backgroundColor: "#f9f9f9",
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  pressedCard: {
+    backgroundColor: "#e0e0e0",
+  },
+  restaurantImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  restaurantInfo: {
+    justifyContent: "center",
+  },
+  restaurantName: {
+    fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semi-transparente
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: "white",
   },
 });
