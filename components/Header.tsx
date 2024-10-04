@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
 import { Ionicons } from '@expo/vector-icons'; // Usaremos iconos de Expo
 
 interface HeaderProps {
@@ -17,7 +19,10 @@ const Header: React.FC<HeaderProps> = ({ title, onProfilePress, onSearchPress })
       </TouchableOpacity>
 
       {/* Título centrado */}
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subText}>Comer seguro, sin gluten</Text>
+      </View>
 
       {/* Botón de búsqueda */}
       <TouchableOpacity onPress={onSearchPress} style={styles.iconContainer}>
@@ -38,10 +43,19 @@ const styles = StyleSheet.create({
     marginTop: 0,
     paddingTop: 25,
   },
+  titleContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
+  },  
+  subText: {
+    fontSize: 12, // Texto más pequeño
+    color: 'white', // Color blanco igual que el título
+    marginTop: 4,  // Separación del título
   },
   iconContainer: {
     padding: 8,
