@@ -15,6 +15,7 @@ import { ThemedView } from "@/components/ThemedView";
 import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
+import Header from '@/components/Header';
 
 // Definir el tipo para representar la ubicacion del usuario
 type LocationType = {
@@ -220,6 +221,81 @@ export default function HomeScreen() {
   };
 
   return (
+    <View style={{ flex: 1 }}>
+        <Header 
+          title="DondeComo" // Título del header
+          onProfilePress={() => console.log('Perfil presionado')} // Preparo ya para un proximo sprint la accion de este boton
+          onSearchPress={() => console.log('Búsqueda presionada')} // Preparo ya para un proximo sprint la accion de este boton
+        />
+      {/* Mapa de Google Maps */}
+      <View style={styles.mapContainer}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : // Indicador de carga mientras se obtiene la ubicación
+        location ? (
+          <MapView
+            style={styles.map}
+            region={location} // Región centrada en la ubicación del usuario
+            showsUserLocation={true} // Muestra el icono de la ubicación del usuario
+            showsMyLocationButton={true} // Botón para centrar en la ubicación del usuario
+          >
+            {/* Marcadores de los puntos de comida */}
+            {foodPoints.map((point) => (
+              <Marker
+                key={point.id} // Cada marcador necesita una clave única
+                coordinate={{
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                }}
+                title={point.name} // Nombre del restaurante como título del marcador
+              />
+            ))}
+          </MapView>
+        ) : (
+          <ThemedText>No se pudo obtener la ubicación</ThemedText>
+          // Mensaje si no se obtiene la ubicación
+        )}
+      </View>
+          {/* Lista de restaurantes cercanos */}
+          <ThemedView style={styles.restaurantsContainer}>
+              <ThemedText type="title" style={styles.listTitle}>
+                  Restaurantes cercanos
+              </ThemedText>
+
+              {nearbyRestaurants.length === 0 ? (
+                  <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
+              ) : (
+                  <FlatList
+                      data={nearbyRestaurants}
+                      keyExtractor={(item) => item.id.toString()}
+                      renderItem={({ item }) => (
+                          <Pressable
+                              onPressIn={() => setLocation({
+                                  latitude: item.latitude,
+                                  longitude: item.longitude,
+                                  latitudeDelta: 0.005,
+                                  longitudeDelta: 0.005,
+                              })}
+                              style={({ pressed }) => [
+                                  styles.restaurantCard,
+                                  pressed && styles.pressedCard, // Estilo adicional cuando se presiona
+                              ]}
+                          >
+                              <Image
+                                  source={require("@/assets/images/restaurant-placeholder.png")}
+                                  style={styles.restaurantImage}
+                              />
+                              <View style={styles.restaurantInfo}>
+                                  <ThemedText type="subtitle" style={styles.restaurantName}>
+                                      {item.name}
+                                  </ThemedText>
+                              </View>
+                          </Pressable>
+                      )}
+                  />
+              )}
+          </ThemedView>
+    </View>
     <ScrollView ref={scrollViewRef}>
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }} // Estilo del encabezado
@@ -342,8 +418,11 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   mapContainer: {
-    height: 300,
-    marginVertical: 10,
+    height: 400, // Altura fija para el mapa
+    marginHorizontal: 16, // Márgenes para que no toque los bordes
+    borderRadius: 10, // Bordes redondeados opcionales
+    overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
+    paddingTop: 16, // Agrego un espacio entre el header y el mapa.
   },
   map: {
     flex: 1,
@@ -357,7 +436,8 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   listTitle: {
-    fontSize: 20,
+    marginBottom: 10,
+    fontSize: 24,
     fontWeight: "bold",
   },
   restaurantCard: {
@@ -366,6 +446,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     marginVertical: 5,
     borderRadius: 5,
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3, 
   },
   pressedCard: {
     backgroundColor: "#e0e0e0",
