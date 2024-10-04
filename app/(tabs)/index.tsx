@@ -16,7 +16,7 @@ import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
 
-// Definir el tipo para el estado de location y para los puntos de comida
+// Definir el tipo para representar la ubicacion del usuario
 type LocationType = {
   latitude: number;
   longitude: number;
@@ -24,7 +24,7 @@ type LocationType = {
   longitudeDelta: number;
 } | null;
 
-// Definición del tipo para representar puntos de comida (restaurantes)
+// Definir el tipo para representar puntos de comida (restaurantes)
 type FoodPoint = {
   id: number;
   name: string;
@@ -41,17 +41,21 @@ export default function HomeScreen() {
 
   // Estado para almacenar los restaurantes cercanos al usuario
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
+  // Al momento de realizar una llamada a la API de Google Places te retorna una lista de restaurantes (en este caso) y si hay mas de cierta cantidad
+  // Entonces lo que hace google es usar un token para mostrarlos en una pagina siguiente
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
 
   // Estado para el modal
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
+  // Estado para el restaurante que se selecciona
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<FoodPoint | null>(null);
 
-  // Referencia a Parallax y ScrollView
+  // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
   const parallaxScrollViewRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Aquí agregamos los restaurantes adicionales
+  // Array de restaurantes adicionales o que no aparecen en Places
   const additionalRestaurants: FoodPoint[] = [
     {
       id: 1,
@@ -107,7 +111,7 @@ export default function HomeScreen() {
 
   // Función para obtener restaurantes cercanos
   const fetchRestaurants = async (latitude: number, longitude: number) => {
-    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Reemplaza con tu API Key
+    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&type=restaurant&key=${API_KEY}`;
 
     try {
@@ -117,27 +121,30 @@ export default function HomeScreen() {
       if (data.results && data.results.length > 0) {
         // Mapeo de los resultados a nuestro estado de nearbyRestaurants
         const filteredRestaurants = data.results.map((place: any) => ({
-          id: place.id ? place.id : Math.random(), // Usa el ID único proporcionado por la API o genera uno aleatorio
+          id: place.place_id, // ID que traemos desde la respuesta de la API
           name: place.name,
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
         }));
 
+        // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev)
+        // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants)
+        // Finalmente se devuelve una nueva lista con todos los erstaurantes juntos
         setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
         setNextPageToken(data.next_page_token || null); // Guardamos el token de la siguiente página
       } else {
-        console.log("No results found");
+        console.log("No se encontraron resultados");
       }
     } catch (error) {
-      console.error("Error fetching restaurants:", error);
+      console.error("Error al intentar el fetch:", error);
     }
   };
 
-  // Función para cargar más restaurantes cuando se llega al final de la lista
+  // Función para cargar más restaurantes cuando se llega al final de la lista (con el nextPageToken en caso de que exista)
   const loadMoreRestaurants = async () => {
     if (nextPageToken) {
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Esperar un poco antes de hacer la solicitud
-      const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Reemplaza con tu API Key
+      const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${nextPageToken}&key=${API_KEY}`;
 
       try {
@@ -146,28 +153,31 @@ export default function HomeScreen() {
 
         if (data.results && data.results.length > 0) {
           const filteredRestaurants = data.results.map((place: any) => ({
-            id: place.id ? place.id : Math.random(), // Usa el ID único proporcionado por la API o genera uno aleatorio
+            id: place.place_id, // Usa el ID único proporcionado por la API
             name: place.name,
             latitude: place.geometry.location.lat,
             longitude: place.geometry.location.lng,
           }));
 
+          // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev).
+          // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants).
+          // Finalmente se forma una lista con todos los restaurantes juntos.
           setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
           setNextPageToken(data.next_page_token || null);
         } else {
-          console.log("No more results found");
+          console.log("No hay restaurantes cercanos.");
         }
       } catch (error) {
-        console.error("Error fetching more restaurants:", error);
+        console.error("Error al hacer fetch:", error);
       }
     }
   };
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      let { status } = await Location.requestForegroundPermissionsAsync(); // Solicitamos permiso de ubicacion al celular
       if (status !== "granted") {
-        console.log("Permission to access location was denied");
+        console.log("Permiso de ubicacion denegado.");
         setLoading(false);
         return;
       }
@@ -235,6 +245,7 @@ export default function HomeScreen() {
             >
               {/* Marcadores de los restaurantes */}
               {[...nearbyRestaurants, ...additionalRestaurants].map(
+                //Juntamos los restaurantes cercanos a nosotros junto a los que añadimos nosotros
                 (restaurant) => (
                   <Marker
                     key={restaurant.id}
