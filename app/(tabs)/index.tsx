@@ -1,11 +1,10 @@
 import { Image, StyleSheet, View, ActivityIndicator } from 'react-native';
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import MapView, { Marker } from 'react-native-maps';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
+import Header from '../../components/Header';
+import { ThemedText } from '../../components/ThemedText'; 
+
 
 // Definir el tipo para el estado de location y para los puntos de comida
 type LocationType = {
@@ -62,19 +61,12 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={{ flex: 1 }}>
+        <Header 
+          title="DondeComo" // Título del header
+          onProfilePress={() => console.log('Perfil presionado')} // Preparo ya para un proximo sprint la accion de este boton
+          onSearchPress={() => console.log('Búsqueda presionada')} // Preparo ya para un proximo sprint la accion de este boton
         />
-      }>
-      {/* Título y saludo */}
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
-      </ThemedView>
-
       {/* Mapa de Google Maps */}
       <View style={styles.mapContainer}>
         {loading ? (
@@ -102,32 +94,20 @@ export default function HomeScreen() {
           <ThemedText>No se pudo obtener la ubicación</ThemedText> // Mensaje en caso de fallo
         )}
       </View>
-    </ParallaxScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginVertical: 16,
-    paddingHorizontal: 16,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
   mapContainer: {
     height: 400, // Altura fija para el mapa
     marginHorizontal: 16, // Márgenes para que no toque los bordes
     borderRadius: 10, // Bordes redondeados opcionales
     overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
+    paddingTop: 16, // Agrego un espacio entre el header y el mapa.
   },
   map: {
     flex: 1, // Se expande para llenar todo el contenedor
   },
 });
+
