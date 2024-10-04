@@ -1,10 +1,4 @@
-import {
-  Image,
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  FlatList,
-} from "react-native";
+import { Image, StyleSheet, View, ActivityIndicator, FlatList, } from "react-native";
 import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -13,6 +7,7 @@ import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect } from "react";
 import * as Location from "expo-location";
 import { Pressable } from 'react-native'
+import Header from '@/components/Header';
 
 // Definir el tipo para el estado de location y para los puntos de comida
 // LocationType define el tipo de objeto que guarda las coordenadas de ubicación
@@ -137,22 +132,13 @@ export default function HomeScreen() {
   }, []); // Ejecutar el efecto cuando se monta el componente
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }} // Estilo del encabezado
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")} // Logo en el encabezado
-          style={styles.reactLogo}
+    <View style={{ flex: 1 }}>
+        <Header 
+          title="DondeComo" // Título del header
+          onProfilePress={() => console.log('Perfil presionado')} // Preparo ya para un proximo sprint la accion de este boton
+          onSearchPress={() => console.log('Búsqueda presionada')} // Preparo ya para un proximo sprint la accion de este boton
         />
-      }
-    >
-      {/* Título y saludo */}
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Comer seguro, sin gluten</ThemedText>
-        {/* Título de la pantalla */}
-      </ThemedView>
-
-      {/* Mapa */}
+      {/* Mapa de Google Maps */}
       <View style={styles.mapContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
@@ -220,29 +206,17 @@ export default function HomeScreen() {
                   />
               )}
           </ThemedView>
-    </ParallaxScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 16,
-    paddingHorizontal: 16,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
   mapContainer: {
-    height: 400,
-    marginHorizontal: 16,
-    borderRadius: 10,
-    overflow: "hidden",
+    height: 400, // Altura fija para el mapa
+    marginHorizontal: 16, // Márgenes para que no toque los bordes
+    borderRadius: 10, // Bordes redondeados opcionales
+    overflow: 'hidden', // Asegura que el mapa respete los bordes redondeados
+    paddingTop: 16, // Agrego un espacio entre el header y el mapa.
   },
   map: {
     flex: 1,
@@ -285,3 +259,4 @@ const styles = StyleSheet.create({
         backgroundColor: '#e0e0e0', // Cambia el color al presionar
     },
 });
+
