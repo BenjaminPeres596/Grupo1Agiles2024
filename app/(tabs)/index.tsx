@@ -233,7 +233,7 @@ export default function HomeScreen() {
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : location ? (
-            <MapView style={styles.map} region={location}>
+            <MapView style={styles.map} region={location} showsUserLocation={true}>
               {[...nearbyRestaurants, ...additionalRestaurants].map(
                 (restaurant) => (
                   <Marker
