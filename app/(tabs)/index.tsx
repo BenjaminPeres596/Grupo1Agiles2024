@@ -15,6 +15,8 @@ import { ThemedView } from "@/components/ThemedView";
 import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
+import RestaurantModal from "@/components/modal/RestaurantModal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "@/components/Header";
 
 // Definir el tipo para representar la ubicación del usuario
@@ -49,13 +51,14 @@ export default function HomeScreen() {
   // Estado para el modal
   const [modalVisible, setModalVisible] = useState(false);
   // Estado para el restaurante que se selecciona
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<FoodPoint | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
 
   // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
   const parallaxScrollViewRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  //
+  const [ratings, setRatings] = useState<{ [key: number]: number }>({});
   // Array de restaurantes adicionales o que no aparecen en Places
   const additionalRestaurants: FoodPoint[] = [
     {
@@ -213,10 +216,44 @@ export default function HomeScreen() {
     setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
   };
 
+  const openModal = (restaurant:FoodPoint) => {
+    setSelectedRestaurant(restaurant);
+    setModalVisible(true);
+  };
+
   // Función para desplazarse hacia arriba
   const scrollToTop = () => {
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ y: 0, animated: true });
+    }
+  };
+
+  useEffect(() => {
+    // Cargar ratings persistidos cuando se monta el componente
+    const loadRatings = async () => {
+      try {
+        const storedRatings = await AsyncStorage.getItem("restaurantRatings");
+        if (storedRatings) {
+          setRatings(JSON.parse(storedRatings));
+        }
+      } catch (error) {
+        console.error("Error al cargar los ratings", error);
+      }
+    };
+  
+    loadRatings();
+  }, []);
+
+  // Función para guardar un rating
+  const handleRatingChange = async (restaurantId: number, newRating: number) => {
+    const updatedRatings = { ...ratings, [restaurantId]: newRating };
+    setRatings(updatedRatings);
+
+  try {
+    // Guardar los ratings actualizados en AsyncStorage
+    await AsyncStorage.setItem("restaurantRatings", JSON.stringify(updatedRatings));
+  } catch (error) {
+    console.error("Error al guardar el rating", error);
     }
   };
 
@@ -227,26 +264,42 @@ export default function HomeScreen() {
         onProfilePress={() => console.log("Perfil presionado")}
         onSearchPress={() => console.log("Búsqueda presionada")}
       />
-
+    
       <ScrollView ref={scrollViewRef}>
         <View style={styles.mapContainer}>
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : location ? (
             <MapView style={styles.map} region={location} showsUserLocation={true}>
-              {[...nearbyRestaurants, ...additionalRestaurants].map(
-                (restaurant) => (
-                  <Marker
-                    key={`restaurant-${restaurant.id}`} // Ensure unique keys by prefixing the ID
-                    coordinate={{
-                      latitude: restaurant.latitude,
-                      longitude: restaurant.longitude,
-                    }}
-                    title={restaurant.name}
-                    description="Restaurante sin gluten"
-                  />
-                )
-              )}
+              {nearbyRestaurants.map((restaurant) => (
+                <Marker
+                  key={`nearby-${restaurant.id}`} // Prefijar con "nearby-" para hacer la clave única
+                  coordinate={{
+                    latitude: restaurant.latitude,
+                    longitude: restaurant.longitude,
+                  }}
+                  title={restaurant.name}
+                  description="Restaurante sin gluten"
+                  onPress={() => {
+                    openModal(restaurant); // Abrir el modal al presionar un marcador
+                  }}
+                />
+              ))}
+
+              {additionalRestaurants.map((restaurant) => (
+                <Marker
+                  key={`additional-${restaurant.id}`} // Prefijar con "additional-" para hacer la clave única
+                  coordinate={{
+                    latitude: restaurant.latitude,
+                    longitude: restaurant.longitude,
+                  }}
+                  title={restaurant.name}
+                  description="Restaurante sin gluten"
+                  onPress={() => {
+                    openModal(restaurant); // Abrir el modal al presionar un marcador
+                  }}
+                />
+              ))}
             </MapView>
           ) : (
             <ThemedText>No se pudo obtener la ubicación</ThemedText>
@@ -298,27 +351,17 @@ export default function HomeScreen() {
           )}
         </ThemedView>
 
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              {selectedRestaurant && (
-                <>
-                  <Text style={styles.modalTitle}>
-                    {selectedRestaurant.name}
-                  </Text>
-                  <Pressable style={styles.closeButton} onPress={closeModal}>
-                    <Text style={styles.closeButtonText}>Cerrar</Text>
-                  </Pressable>
-                </>
-              )}
-            </View>
-          </View>
-        </Modal>
+        <RestaurantModal
+        visible={modalVisible}
+        onClose={closeModal}
+        restaurant={selectedRestaurant}
+        rating={selectedRestaurant ? ratings[selectedRestaurant.id] || 0 : 0}
+        onRatingChange={(newRating) => {
+          if (selectedRestaurant) {
+            handleRatingChange(selectedRestaurant.id, newRating);
+          }
+        }}
+      />
       </ScrollView>
     </View>
   );
