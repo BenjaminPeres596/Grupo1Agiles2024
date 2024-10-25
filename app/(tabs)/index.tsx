@@ -93,7 +93,6 @@ export default function HomeScreen() {
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
         }));
-
         setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
         setNextPageToken(data.next_page_token || null);
       } else {
@@ -176,12 +175,38 @@ export default function HomeScreen() {
     }
   };
 
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371e3; // Radio de la Tierra en metros
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Retorna la distancia en metros
+  };
+
   // Filtrar restaurantes en base al texto de búsqueda
   const filteredRestaurants = [
     ...nearbyRestaurants,
-    ...additionalRestaurants,
+    ...additionalRestaurants.filter((restaurant) => {
+      // Aplicar solo el filtro de distancia
+      return (
+        location &&
+        calculateDistance(
+          location.latitude,
+          location.longitude,
+          restaurant.latitude,
+          restaurant.longitude
+        ) <= 1000
+      );
+    }),
   ].filter((restaurant) =>
-    restaurant.name.toLowerCase().includes(searchText.toLowerCase())
+    restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
   );
 
   // Manejar la selección del restaurante desde el componente Busqueda
@@ -214,9 +239,9 @@ export default function HomeScreen() {
             region={location}
             showsUserLocation={true}
           >
-            {filteredRestaurants.map((restaurant) => (
+            {filteredRestaurants.map((restaurant, index) => (
               <Marker
-                key={`restaurant-${restaurant.id}`}
+                key={`restaurant-${restaurant.id}-${index}`}
                 coordinate={{
                   latitude: restaurant.latitude,
                   longitude: restaurant.longitude,
@@ -235,7 +260,7 @@ export default function HomeScreen() {
         <Busqueda
           searchText={searchText}
           onSearchChange={setSearchText}
-          restaurants={[...nearbyRestaurants]}
+          restaurants={[...filteredRestaurants]}
           onClose={() => setModalVisible(false)}
           onSelectRestaurant={handleRestaurantSelect} // Pasa la función aquí
         />

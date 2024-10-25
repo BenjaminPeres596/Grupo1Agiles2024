@@ -14,7 +14,7 @@ interface BusquedaProps {
   onSearchChange: (text: string) => void;
   restaurants: FoodPoint[];
   onClose: () => void;
-  onSelectRestaurant: (restaurant: FoodPoint) => void; // Corregido a minúscula
+  onSelectRestaurant: (restaurant: FoodPoint) => void;
 }
 
 // Define la interfaz para los puntos de comida
@@ -30,12 +30,15 @@ const Busqueda: React.FC<BusquedaProps> = ({
   onSearchChange,
   restaurants,
   onClose,
-  onSelectRestaurant, // Corregido a minúscula
+  onSelectRestaurant,
 }) => {
-  // Filtrar restaurantes en base al texto de búsqueda
-  const filteredRestaurants = restaurants.filter((restaurant) =>
-    restaurant.name.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filtrar restaurantes solo cuando hay texto en el campo de búsqueda
+  const filteredRestaurants =
+    searchText.trim() === ""
+      ? []
+      : restaurants.filter((restaurant) =>
+          restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
+        );
 
   return (
     <View style={styles.container}>
@@ -45,15 +48,23 @@ const Busqueda: React.FC<BusquedaProps> = ({
         placeholder="Buscar restaurante"
         onChangeText={onSearchChange}
       />
-      <FlatList
-        data={filteredRestaurants}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => onSelectRestaurant(item)}>
-            <Text style={styles.restaurantItem}>{item.name}</Text>
-          </Pressable>
-        )}
-      />
+      {filteredRestaurants.length > 0 && (
+        <FlatList
+          data={filteredRestaurants}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => onSelectRestaurant(item)}
+              style={({ pressed }) => [
+                styles.restaurantCard,
+                pressed && styles.pressedCard,
+              ]}
+            >
+              <Text style={styles.restaurantItem}>{item.name}</Text>
+            </Pressable>
+          )}
+        />
+      )}
       <Pressable onPress={onClose}>
         <Text style={styles.closeButton}>Cerrar</Text>
       </Pressable>
@@ -82,6 +93,24 @@ const styles = StyleSheet.create({
     color: "blue",
     marginTop: 16,
     textAlign: "center",
+  },
+  restaurantCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 8,
+    borderRadius: 12,
+    marginVertical: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+    marginStart: 2,
+    marginEnd: 2,
+  },
+  pressedCard: {
+    backgroundColor: "#e0e0e0",
   },
 });
 
