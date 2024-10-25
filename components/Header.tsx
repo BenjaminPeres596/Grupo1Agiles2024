@@ -4,38 +4,38 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   TextInput,
 } from "react-native";
-import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from "@/components/ThemedText";
-import { Ionicons } from "@expo/vector-icons"; // Usaremos iconos de Expo
+import { Ionicons } from "@expo/vector-icons";
 
 interface HeaderProps {
   title: string;
   onProfilePress?: () => void;
-  onSearchPress?: () => void;
-  onSearchChange?: (text: string) => void;
+  onSearchPress?: () => void; // Cambiado para solo abrir el campo de búsqueda
   searchText?: string;
+  onSearchChange?: (text: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
   title,
   onProfilePress,
   onSearchPress,
+  searchText = "",
   onSearchChange,
-  searchText,
 }) => {
-  const [isSearchVisible, setIsSearchVisible] = useState(false); // Estado para mostrar/ocultar el input de búsqueda
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+
+  const handleSearchPress = () => {
+    setIsSearchVisible(!isSearchVisible); // Alterna visibilidad del campo de búsqueda
+    onSearchPress?.(); // Llama a la función para abrir el campo de búsqueda
+  };
 
   return (
     <View style={styles.headerContainer}>
-      {/* Botón de perfil */}
       <TouchableOpacity onPress={onProfilePress} style={styles.iconContainer}>
         <Ionicons name="person-circle-outline" size={32} color="white" />
       </TouchableOpacity>
 
-      {/* Título centrado */}
       <View style={styles.titleContainer}>
         {isSearchVisible ? (
           <TextInput
@@ -53,9 +53,8 @@ const Header: React.FC<HeaderProps> = ({
         )}
       </View>
 
-      {/* Botón de búsqueda */}
       <TouchableOpacity
-        onPress={() => setIsSearchVisible(!isSearchVisible)} // Alterna la visibilidad del input de búsqueda
+        onPress={handleSearchPress}
         style={styles.iconContainer}
       >
         <Ionicons
@@ -73,7 +72,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#EF4423", // Color rojo del header
+    backgroundColor: "#EF4423",
     height: 90,
     paddingHorizontal: 16,
     marginTop: 0,
@@ -89,9 +88,9 @@ const styles = StyleSheet.create({
     color: "white",
   },
   subText: {
-    fontSize: 12, // Texto más pequeño
-    color: "white", // Color blanco igual que el título
-    marginTop: 4, // Separación del título
+    fontSize: 12,
+    color: "white",
+    marginTop: 4,
   },
   iconContainer: {
     padding: 8,

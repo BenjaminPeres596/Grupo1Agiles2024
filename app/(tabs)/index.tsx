@@ -16,6 +16,7 @@ import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
 import Header from "@/components/Header";
+import Busqueda from "@/components/Busqueda";
 
 // Definir el tipo para representar la ubicación del usuario
 type LocationType = {
@@ -43,7 +44,6 @@ export default function HomeScreen() {
   const parallaxScrollViewRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [searchText, setSearchText] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
 
   const additionalRestaurants: FoodPoint[] = [
     {
@@ -77,25 +77,6 @@ export default function HomeScreen() {
       longitude: -57.924194197557235,
     },
   ];
-
-  const haversine = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
@@ -203,90 +184,63 @@ export default function HomeScreen() {
     restaurant.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
+  // Manejar la selección del restaurante desde el componente Busqueda
+  const handleRestaurantSelect = (restaurant: FoodPoint) => {
+    setSelectedRestaurant(restaurant);
+    setLocation({
+      latitude: restaurant.latitude,
+      longitude: restaurant.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    });
+    setModalVisible(false); // Cerrar el modal
+    scrollToTop(); // Scroll hacia arriba
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Header
         title="DondeComo"
         onProfilePress={() => console.log("Perfil presionado")}
-        onSearchPress={() => setIsSearching(!isSearching)} // Toggle de búsqueda
+        onSearchPress={() => setModalVisible(true)} // Mostrar modal al hacer clic
         searchText={searchText} // Texto del campo de búsqueda
         onSearchChange={(text: string) => setSearchText(text)} // Actualiza el estado del texto
       />
 
-      <ScrollView ref={scrollViewRef}>
-        <View style={styles.mapContainer}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-          ) : location ? (
-            <MapView
-              style={styles.map}
-              region={location}
-              showsUserLocation={true}
-            >
-              {filteredRestaurants.map((restaurant) => (
-                <Marker
-                  key={`restaurant-${restaurant.id}`}
-                  coordinate={{
-                    latitude: restaurant.latitude,
-                    longitude: restaurant.longitude,
-                  }}
-                  title={restaurant.name}
-                  description="Restaurante sin gluten"
-                />
-              ))}
-            </MapView>
-          ) : (
-            <ThemedText>No se pudo obtener la ubicación</ThemedText>
-          )}
-        </View>
+      <View style={styles.mapContainer}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : location ? (
+          <MapView
+            style={styles.map}
+            region={location}
+            showsUserLocation={true}
+          >
+            {filteredRestaurants.map((restaurant) => (
+              <Marker
+                key={`restaurant-${restaurant.id}`}
+                coordinate={{
+                  latitude: restaurant.latitude,
+                  longitude: restaurant.longitude,
+                }}
+                title={restaurant.name}
+                description="Restaurante sin gluten"
+              />
+            ))}
+          </MapView>
+        ) : (
+          <ThemedText>No se pudo obtener la ubicación</ThemedText>
+        )}
+      </View>
 
-        <ThemedView style={styles.restaurantsContainer}>
-          <ThemedText type="title" style={styles.listTitle}>
-            Restaurantes cercanos
-          </ThemedText>
-          {filteredRestaurants.length === 0 ? (
-            <ThemedText>No se encontraron restaurantes cercanos.</ThemedText>
-          ) : (
-            <FlatList
-              data={filteredRestaurants}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setLocation({
-                      latitude: item.latitude,
-                      longitude: item.longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    });
-                    scrollToTop();
-                  }}
-                >
-                  <ThemedView style={styles.restaurantItem}>
-                    <Image
-                      style={styles.restaurantImage}
-                      source={require("@/assets/images/restaurant-placeholder.png")}
-                    />
-                    <ThemedText>{item.name}</ThemedText>
-                  </ThemedView>
-                </Pressable>
-              )}
-              onEndReached={loadMoreRestaurants}
-              onEndReachedThreshold={0.5}
-            />
-          )}
-        </ThemedView>
-      </ScrollView>
-
-      <Modal visible={modalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <ThemedText type="title">{selectedRestaurant?.name}</ThemedText>
-            <Pressable style={styles.closeButton} onPress={closeModal}>
-              <Text style={styles.closeButtonText}>Cerrar</Text>
-            </Pressable>
-          </View>
-        </View>
+      <Modal visible={modalVisible} animationType="slide">
+        <Busqueda
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          restaurants={[...nearbyRestaurants]}
+          onClose={() => setModalVisible(false)}
+          onSelectRestaurant={handleRestaurantSelect} // Pasa la función aquí
+        />
       </Modal>
     </View>
   );
@@ -294,47 +248,31 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   mapContainer: {
-    height: 300,
+    flex: 1,
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
   },
   restaurantsContainer: {
     padding: 16,
   },
   listTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 8,
   },
   restaurantItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    padding: 8,
+    backgroundColor: "#f9f9f9",
+    elevation: 1,
   },
   restaurantImage: {
     width: 50,
     height: 50,
-    marginRight: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 8,
-    width: 300,
-    alignItems: "center",
-  },
-  closeButton: {
-    marginTop: 16,
-    padding: 10,
-    backgroundColor: "#2196F3",
-    borderRadius: 8,
-  },
-  closeButtonText: {
-    color: "#fff",
+    marginRight: 8,
   },
 });
