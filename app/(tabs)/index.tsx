@@ -202,9 +202,7 @@ export default function HomeScreen() {
       <Header
         title="DondeComo"
         onProfilePress={() => console.log("Perfil presionado")}
-        onSearchPress={() => setModalVisible(true)} // Mostrar modal al hacer clic
-        searchText={searchText} // Texto del campo de búsqueda
-        onSearchChange={(text: string) => setSearchText(text)} // Actualiza el estado del texto
+        onSearchPress={() => setModalVisible(true)}
       />
 
       <View style={styles.mapContainer}>

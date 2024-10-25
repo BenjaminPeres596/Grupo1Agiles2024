@@ -1,35 +1,18 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-} from "react-native";
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface HeaderProps {
   title: string;
   onProfilePress?: () => void;
-  onSearchPress?: () => void; // Cambiado para solo abrir el campo de búsqueda
-  searchText?: string;
-  onSearchChange?: (text: string) => void;
+  onSearchPress?: () => void; // Propiedad para manejar el evento de la búsqueda
 }
 
 const Header: React.FC<HeaderProps> = ({
   title,
   onProfilePress,
   onSearchPress,
-  searchText = "",
-  onSearchChange,
 }) => {
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
-
-  const handleSearchPress = () => {
-    setIsSearchVisible(!isSearchVisible); // Alterna visibilidad del campo de búsqueda
-    onSearchPress?.(); // Llama a la función para abrir el campo de búsqueda
-  };
-
   return (
     <View style={styles.headerContainer}>
       <TouchableOpacity onPress={onProfilePress} style={styles.iconContainer}>
@@ -37,31 +20,15 @@ const Header: React.FC<HeaderProps> = ({
       </TouchableOpacity>
 
       <View style={styles.titleContainer}>
-        {isSearchVisible ? (
-          <TextInput
-            value={searchText}
-            style={styles.searchInput}
-            placeholder="Buscar restaurante"
-            placeholderTextColor="#ccc"
-            onChangeText={onSearchChange} // Maneja el cambio de texto
-          />
-        ) : (
-          <>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subText}>Comer seguro, sin gluten</Text>
-          </>
-        )}
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subText}>Comer seguro, sin gluten</Text>
       </View>
 
       <TouchableOpacity
-        onPress={handleSearchPress}
+        onPress={onSearchPress} // Abre el modal al presionar la lupa
         style={styles.iconContainer}
       >
-        <Ionicons
-          name={isSearchVisible ? "close-outline" : "search-outline"}
-          size={28}
-          color="white"
-        />
+        <Ionicons name="search-outline" size={28} color="white" />
       </TouchableOpacity>
     </View>
   );
@@ -94,14 +61,6 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     padding: 8,
-  },
-  searchInput: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 40,
-    width: 200,
-    color: "#000",
   },
 });
 
