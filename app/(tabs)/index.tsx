@@ -44,6 +44,11 @@ export default function HomeScreen() {
   const parallaxScrollViewRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [searchText, setSearchText] = useState("");
+  const [maxDistance, setMaxDistance] = useState(30000);
+
+  const handleDistanceChange = (distance: number) => {
+    setMaxDistance(distance);
+  };
 
   const additionalRestaurants: FoodPoint[] = [
     {
@@ -80,7 +85,7 @@ export default function HomeScreen() {
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&type=restaurant&key=${API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${maxDistance}&type=restaurant&key=${API_KEY}`;
 
     try {
       const response = await fetch(url);
@@ -202,7 +207,7 @@ export default function HomeScreen() {
           location.longitude,
           restaurant.latitude,
           restaurant.longitude
-        ) <= 1000
+        ) <= maxDistance
       );
     }),
   ].filter((restaurant) =>
@@ -221,7 +226,7 @@ export default function HomeScreen() {
     setModalVisible(false); // Cerrar el modal
     scrollToTop(); // Scroll hacia arriba
   };
-
+  
   return (
     <View style={{ flex: 1 }}>
       <Header
@@ -261,9 +266,12 @@ export default function HomeScreen() {
           searchText={searchText}
           onSearchChange={setSearchText}
           restaurants={[...filteredRestaurants]}
+          userLocation={location} // Pasa la ubicación del usuario
+          maxDistance={maxDistance} // Establece la distancia máxima
           onClose={() => setModalVisible(false)}
-          onSelectRestaurant={handleRestaurantSelect} // Pasa la función aquí
-        />
+          onSelectRestaurant={handleRestaurantSelect}
+          onDistanceChange={setMaxDistance} // Pasar la función para manejar el cambio de distancia
+/>
       </Modal>
     </View>
   );
