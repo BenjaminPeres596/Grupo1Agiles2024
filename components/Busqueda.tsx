@@ -6,6 +6,9 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
 } from "react-native";
 
 // Define la interfaz para las props que recibe el componente
@@ -41,38 +44,48 @@ const Busqueda: React.FC<BusquedaProps> = ({
         );
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        value={searchText}
-        placeholder="Buscar restaurante"
-        onChangeText={onSearchChange}
-      />
-      {filteredRestaurants.length > 0 && (
-        <FlatList
-          data={filteredRestaurants}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => onSelectRestaurant(item)}
-              style={({ pressed }) => [
-                styles.restaurantCard,
-                pressed && styles.pressedCard,
-              ]}
-            >
-              <Text style={styles.restaurantItem}>{item.name}</Text>
-            </Pressable>
-          )}
+    <SafeAreaView style={styles.safeContainer}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 32 : 0} // Ajusta según sea necesario
+      >
+        <TextInput
+          style={styles.searchInput}
+          value={searchText}
+          placeholder="Buscar restaurante"
+          onChangeText={onSearchChange}
         />
-      )}
-      <Pressable onPress={onClose}>
-        <Text style={styles.closeButton}>Cerrar</Text>
-      </Pressable>
-    </View>
+        {filteredRestaurants.length > 0 && (
+          <FlatList
+            data={filteredRestaurants}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => onSelectRestaurant(item)}
+                style={({ pressed }) => [
+                  styles.restaurantCard,
+                  pressed && styles.pressedCard,
+                ]}
+              >
+                <Text style={styles.restaurantItem}>{item.name}</Text>
+              </Pressable>
+            )}
+          />
+        )}
+        <Pressable onPress={onClose}>
+          <Text style={styles.closeButton}>Cerrar</Text>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeContainer: {
+    flex: 1,
+    backgroundColor: "white",
+  },
   container: {
     flex: 1,
     padding: 16,
