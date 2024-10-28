@@ -19,6 +19,8 @@ import RestaurantModal from "@/components/modal/RestaurantModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "@/components/Header";
 import Busqueda from "@/components/Busqueda";
+import RestaurantInfoCard from "@/components/RestaurantInfoCard";
+
 
 // Definir el tipo para representar la ubicación del usuario
 type LocationType = {
@@ -33,6 +35,10 @@ type FoodPoint = {
   name: string;
   latitude: number;
   longitude: number;
+  address?: string;
+  phone?: string;
+  description?: string;
+  image?: string;
 };
 
 export default function HomeScreen() {
@@ -48,42 +54,14 @@ export default function HomeScreen() {
   const parallaxScrollViewRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [searchText, setSearchText] = useState("");
+  const handleMarkerPress = (restaurant: FoodPoint) => {
+      fetchRestaurantDetails(restaurant.id.toString()); // Obtiene los detalles del restaurante
+      setSelectedRestaurant(restaurant); // Establecer el restaurante seleccionado
+      setModalVisible(false); // Cerrar el modal de búsqueda si está abierto
+  };
 
-  //
   const [ratings, setRatings] = useState<{ [key: number]: number }>({});
   // Array de restaurantes adicionales o que no aparecen en Places
-  const additionalRestaurants: FoodPoint[] = [
-    {
-      id: 1,
-      name: "La Cabrera Al Paso Baxar Mercado",
-      latitude: -34.9138048884854,
-      longitude: -57.94808435414168,
-    },
-    {
-      id: 2,
-      name: "Green Garden - La Plata",
-      latitude: -34.91801012714514,
-      longitude: -57.95458602885797,
-    },
-    {
-      id: 3,
-      name: "La Trattoria Cucina Caffe",
-      latitude: -34.91575797594942,
-      longitude: -57.95510101289757,
-    },
-    {
-      id: 4,
-      name: "Afan en la cuadra",
-      latitude: -34.91081037947414,
-      longitude: -57.94575454132004,
-    },
-    {
-      id: 5,
-      name: "Ese es mi pollo",
-      latitude: -34.90639681023369,
-      longitude: -57.924194197557235,
-    },
-  ];
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
@@ -245,83 +223,120 @@ export default function HomeScreen() {
   };
 
   // Filtrar restaurantes en base al texto de búsqueda
-  const filteredRestaurants = [
-    ...nearbyRestaurants,
-    ...additionalRestaurants.filter((restaurant) => {
-      // Aplicar solo el filtro de distancia
-      return (
-        location &&
-        calculateDistance(
-          location.latitude,
-          location.longitude,
-          restaurant.latitude,
-          restaurant.longitude
-        ) <= 1000
-      );
-    }),
-  ].filter((restaurant) =>
-    restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
-  );
+    const filteredRestaurants = nearbyRestaurants.filter((restaurant) =>
+        restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
+    );
 
   // Manejar la selección del restaurante desde el componente Busqueda
-  const handleRestaurantSelect = (restaurant: FoodPoint) => {
-    setSelectedRestaurant(restaurant);
-    setLocation({
-      latitude: restaurant.latitude,
-      longitude: restaurant.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
-    setModalVisible(false); // Cerrar el modal
-    scrollToTop(); // Scroll hacia arriba
-  };
+    // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
+    const handleRestaurantSelect = (restaurant: FoodPoint) => {
+        closeModal(); // Cierra el modal de búsqueda si está abierto
+        handleMarkerPress(restaurant); // Abre la tarjeta del restaurante
+        fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
 
-  return (
-    <View style={{ flex: 1 }}>
-      <Header
-        title="DondeComo"
-        onProfilePress={() => console.log("Perfil presionado")}
-        onSearchPress={() => setModalVisible(true)}
-      />
+    };
 
-      <View style={styles.mapContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : location ? (
-          <MapView
-            style={styles.map}
-            region={location}
-            showsUserLocation={true}
-          >
-            {filteredRestaurants.map((restaurant, index) => (
-              <Marker
-                key={`restaurant-${restaurant.id}-${index}`}
-                coordinate={{
-                  latitude: restaurant.latitude,
-                  longitude: restaurant.longitude,
-                }}
-                title={restaurant.name}
-                description="Restaurante sin gluten"
-              />
-            ))}
-          </MapView>
-        ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText>
-        )}
-      </View>
+    const fetchRestaurantDetails = async (placeId: string) => {
+        const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Asegúrate de tener la clave de API correctamente
+        const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`;
 
-      <Modal visible={modalVisible} animationType="slide">
-        <Busqueda
-          searchText={searchText}
-          onSearchChange={setSearchText}
-          restaurants={[...filteredRestaurants]}
-          onClose={() => setModalVisible(false)}
-          onSelectRestaurant={handleRestaurantSelect} // Pasa la función aquí
-        />
-      </Modal>
-    </View>
-  );
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.result) {
+                const restaurantDetails = {
+                    id: placeId,
+                    name: data.result.name,
+                    address: data.result.formatted_address || "Dirección no disponible",
+                    phone: data.result.formatted_phone_number || "Teléfono no disponible",
+                    description: data.result.types ? data.result.types.join(", ") : "Descripción no disponible",
+                    image: data.result.photos && data.result.photos.length > 0
+                        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${data.result.photos[0].photo_reference}&key=${API_KEY}`
+                        : "https://via.placeholder.com/150",
+                    latitude: null, // Establecer como null si no está disponible
+                    longitude: null,
+                };
+
+                setSelectedRestaurant({
+                    id: Number(restaurantDetails.id), // Convertir a number
+                    name: restaurantDetails.name,
+                    address: restaurantDetails.address,
+                    phone: restaurantDetails.phone,
+                    description: restaurantDetails.description,
+                    image: restaurantDetails.image,
+                    latitude: restaurantDetails.latitude !== null ? restaurantDetails.latitude : 0,
+                    longitude: restaurantDetails.longitude !== null ? restaurantDetails.longitude : 0,
+                });
+            } else {
+                console.log("Detalles del restaurante no disponibles");
+            }
+        } catch (error) {
+            console.error("Error obteniendo detalles del restaurante:", error);
+        }
+    };
+
+    return (
+        <View style={{ flex: 1 }}>
+            <Header
+                title="DondeComo"
+                onProfilePress={() => console.log("Perfil presionado")}
+                onSearchPress={() => setModalVisible(true)}
+            />
+
+            <View style={styles.mapContainer}>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#0000ff" />
+                ) : location ? (
+                    <MapView
+                        style={styles.map}
+                        region={location}
+                        showsUserLocation={true}
+                    >
+                        {filteredRestaurants.map((restaurant, index) => (
+                            <Marker
+                                key={`restaurant-${restaurant.id}-${index}`}
+                                coordinate={{
+                                    latitude: restaurant.latitude,
+                                    longitude: restaurant.longitude,
+                                }}
+                                title={restaurant.name}
+                                description="Restaurante sin gluten"
+                                onPress={() => handleMarkerPress(restaurant)} // Agregar manejador aquí
+                            />
+                        ))}
+                    </MapView>
+                ) : (
+                    <ThemedText>No se pudo obtener la ubicación</ThemedText>
+                )}
+            </View>
+
+            <Modal visible={modalVisible} animationType="slide">
+                <Busqueda
+                    searchText={searchText}
+                    onSearchChange={setSearchText}
+                    restaurants={[...filteredRestaurants]}
+                    onClose={() => setModalVisible(false)}
+                    onSelectRestaurant={(restaurant: FoodPoint) => {
+                        handleRestaurantSelect(restaurant); // Llama a esta función para manejar la selección
+                    }}
+                />
+            </Modal>
+
+            {selectedRestaurant && ( // Asegúrate de que esto esté fuera del modal
+                <RestaurantInfoCard
+                    name={selectedRestaurant.name}
+                    address={selectedRestaurant.address || "Dirección no disponible"} // Proporcionar un valor por defecto
+                    phone={selectedRestaurant.phone || "Teléfono no disponible"} // Proporcionar un valor por defecto
+                    description={selectedRestaurant.description || "Descripción no disponible"} // Proporcionar un valor por defecto
+                    image={selectedRestaurant.image || "https://via.placeholder.com/150"} // Proporcionar un valor por defecto
+                    onClose={closeModal}
+                />
+            )}
+        </View>
+    );
 }
+
 
 const styles = StyleSheet.create({
   mapContainer: {
