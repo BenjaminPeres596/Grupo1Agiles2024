@@ -169,23 +169,9 @@ export default function HomeScreen() {
   };
 
   // Filtrar restaurantes en base al texto de búsqueda
-  const filteredRestaurants = [
-    ...nearbyRestaurants,
-    ...additionalRestaurants.filter((restaurant) => {
-      // Aplicar solo el filtro de distancia
-      return (
-        location &&
-        calculateDistance(
-          location.latitude,
-          location.longitude,
-          restaurant.latitude,
-          restaurant.longitude
-        ) <= 1000
-      );
-    }),
-  ].filter((restaurant) =>
-    restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
-  );
+    const filteredRestaurants = nearbyRestaurants.filter((restaurant) =>
+        restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
+    );
 
   // Manejar la selección del restaurante desde el componente Busqueda
     // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
