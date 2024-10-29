@@ -22,7 +22,7 @@ interface BusquedaProps {
 
 // Define la interfaz para los puntos de comida
 interface FoodPoint {
-  id: number;
+  id: string;
   name: string;
   latitude: number;
   longitude: number;

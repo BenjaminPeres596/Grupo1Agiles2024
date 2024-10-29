@@ -18,6 +18,8 @@ import * as Location from "expo-location";
 import Header from "@/components/Header";
 import Busqueda from "@/components/Busqueda";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 // Definir el tipo para representar la ubicación del usuario
 type LocationType = {
@@ -28,7 +30,7 @@ type LocationType = {
 } | null;
 
 type FoodPoint = {
-  id: number;
+  id: string;
   name: string;
   latitude: number;
   longitude: number;
@@ -36,6 +38,7 @@ type FoodPoint = {
   phone?: string;
   description?: string;
   image?: string;
+  reviews?: any[]; // Agregar la propiedad reviews
 };
 
 export default function HomeScreen() {
@@ -44,8 +47,13 @@ export default function HomeScreen() {
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<FoodPoint | null>(null);
+  // Estado para el restaurante que se selecciona
+  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
+  const [reviews, setReviews] = useState<{ [key: number]: any }>({}); // Estado para las reseñas
+
+  // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
+  const parallaxScrollViewRef = useRef<any>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const [searchText, setSearchText] = useState("");
   const mapRef = useRef<MapView>(null);
 
@@ -76,14 +84,18 @@ export default function HomeScreen() {
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
+        // Mapeo de los resultados a nuestro estado de nearbyRestaurants
         const filteredRestaurants = data.results.map((place: any) => ({
-          id: place.place_id,
+          id: place.place_id, // ID que traemos desde la respuesta de la API
           name: place.name,
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
         }));
+        // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev)
+        // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants)
+        // Finalmente se devuelve una nueva lista con todos los restaurantes juntos
         setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
-        setNextPageToken(data.next_page_token || null);
+        setNextPageToken(data.next_page_token || null); // Guardamos el token de la siguiente página
       } else {
         console.log("No se encontraron resultados");
       }
@@ -92,6 +104,7 @@ export default function HomeScreen() {
     }
   };
 
+  // Función para cargar más restaurantes cuando se llega al final de la lista (con el nextPageToken en caso de que exista)
   const loadMoreRestaurants = async () => {
     if (nextPageToken) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -110,6 +123,9 @@ export default function HomeScreen() {
             longitude: place.geometry.location.lng,
           }));
 
+          // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev).
+          // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants).
+          // Finalmente se forma una lista con todos los restaurantes juntos.
           setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
           setNextPageToken(data.next_page_token || null);
         } else {
@@ -123,7 +139,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      let { status } = await Location.requestForegroundPermissionsAsync(); // Solicitamos permiso de ubicación al celular
       if (status !== "granted") {
         console.log("Permiso de ubicación denegado.");
         setLoading(false);
@@ -137,13 +153,14 @@ export default function HomeScreen() {
         const userLatitude = currentLocation.coords.latitude;
         const userLongitude = currentLocation.coords.longitude;
 
+        // Establecer la ubicación del usuario
         setLocation({
           latitude: userLatitude,
           longitude: userLongitude,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         });
-
+      // Obtener restaurantes cercanos
         await fetchRestaurants(userLatitude, userLongitude);
       } catch (error) {
         console.error("Error obteniendo la ubicación:", error);
@@ -155,7 +172,23 @@ export default function HomeScreen() {
 
   const closeModal = () => {
     setModalVisible(false);
-    setSelectedRestaurant(null);
+    setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
+  };
+
+  // Función para calcular la distancia entre dos puntos geograficos
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371e3; // Radio de la Tierra en metros
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Retorna la distancia en metros
   };
 
   // Filtrar restaurantes en base al texto de búsqueda
@@ -205,7 +238,7 @@ export default function HomeScreen() {
         };
         console.log(restaurantDetails);
         setSelectedRestaurant({
-          id: restaurantDetails.id, // Convertir a number
+          id: restaurantDetails.id,
           name: restaurantDetails.name,
           address: restaurantDetails.address,
           phone: restaurantDetails.phone,
@@ -280,20 +313,19 @@ export default function HomeScreen() {
         />
       </Modal>
 
-      {selectedRestaurant && (
-        <RestaurantInfoCard
-          name={selectedRestaurant.name}
-          address={selectedRestaurant.address || "Dirección no disponible"}
-          phone={selectedRestaurant.phone || "Teléfono no disponible"}
-          description={
-            selectedRestaurant.description || "Descripción no disponible"
-          }
-          image={selectedRestaurant.image || "https://via.placeholder.com/150"}
-          onClose={closeModal}
-        />
-      )}
-    </View>
-  );
+            {selectedRestaurant && ( // Asegúrate de que esto esté fuera del modal
+                <RestaurantInfoCard
+                    restaurantId={selectedRestaurant.id}
+                    name={selectedRestaurant.name}
+                    address={selectedRestaurant.address || "Dirección no disponible"} // Proporcionar un valor por defecto
+                    phone={selectedRestaurant.phone || "Teléfono no disponible"} // Proporcionar un valor por defecto
+                    description={selectedRestaurant.description || "Descripción no disponible"} // Proporcionar un valor por defecto
+                    image={selectedRestaurant.image || "https://via.placeholder.com/150"} // Proporcionar un valor por defecto
+                    onClose={closeModal}
+                />
+            )}
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
