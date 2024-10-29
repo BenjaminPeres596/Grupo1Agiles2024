@@ -15,11 +15,10 @@ import { ThemedView } from "@/components/ThemedView";
 import MapView, { Marker } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
-import RestaurantModal from "@/components/modal/RestaurantModal";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "@/components/Header";
 import Busqueda from "@/components/Busqueda";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 // Definir el tipo para representar la ubicación del usuario
@@ -39,6 +38,7 @@ type FoodPoint = {
   phone?: string;
   description?: string;
   image?: string;
+  reviews?: any[]; // Agregar la propiedad reviews
 };
 
 export default function HomeScreen() {
@@ -49,6 +49,7 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   // Estado para el restaurante que se selecciona
   const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
+  const [reviews, setReviews] = useState<{ [key: number]: any }>({}); // Estado para las reseñas
 
   // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
   const parallaxScrollViewRef = useRef<any>(null);
@@ -59,9 +60,6 @@ export default function HomeScreen() {
       setSelectedRestaurant(restaurant); // Establecer el restaurante seleccionado
       setModalVisible(false); // Cerrar el modal de búsqueda si está abierto
   };
-
-  const [ratings, setRatings] = useState<{ [key: number]: number }>({});
-  // Array de restaurantes adicionales o que no aparecen en Places
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
@@ -163,49 +161,6 @@ export default function HomeScreen() {
     setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
   };
 
-  // ESTRELLAS
-  const openModal = (restaurant:FoodPoint) => {
-    setSelectedRestaurant(restaurant);
-    setModalVisible(true);
-  };
-
-  // Función para desplazarse hacia arriba
-  const scrollToTop = () => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: 0, animated: true });
-    }
-  };
-  // ESTRELLAS
-  useEffect(() => {
-    // Cargar ratings persistidos cuando se monta el componente
-    const loadRatings = async () => {
-      try {
-        const storedRatings = await AsyncStorage.getItem("restaurantRatings");
-        if (storedRatings) {
-          setRatings(JSON.parse(storedRatings));
-        }
-      } catch (error) {
-        console.error("Error al cargar los ratings", error);
-      }
-    };
-  
-    loadRatings();
-  }, []);
-
-  // Función para guardar un rating
-  const handleRatingChange = async (restaurantId: number, newRating: number) => {
-    const updatedRatings = { ...ratings, [restaurantId]: newRating };
-    setRatings(updatedRatings);
-
-  try {
-    // Guardar los ratings actualizados en AsyncStorage
-    await AsyncStorage.setItem("restaurantRatings", JSON.stringify(updatedRatings));
-  } catch (error) {
-    console.error("Error al guardar el rating", error);
-    }
-  };
-
-
   // Función para calcular la distancia entre dos puntos geograficos
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371e3; // Radio de la Tierra en metros
@@ -258,6 +213,10 @@ export default function HomeScreen() {
                     longitude: null,
                 };
 
+                                // Cargar reseñas del restaurante desde AsyncStorage
+                const storedReviews = await AsyncStorage.getItem(`restaurant_${restaurantDetails.id}`);
+                const parsedReviews = storedReviews ? JSON.parse(storedReviews) : null;
+
                 setSelectedRestaurant({
                     id: Number(restaurantDetails.id), // Convertir a number
                     name: restaurantDetails.name,
@@ -267,6 +226,7 @@ export default function HomeScreen() {
                     image: restaurantDetails.image,
                     latitude: restaurantDetails.latitude !== null ? restaurantDetails.latitude : 0,
                     longitude: restaurantDetails.longitude !== null ? restaurantDetails.longitude : 0,
+                    reviews: parsedReviews || [],
                 });
             } else {
                 console.log("Detalles del restaurante no disponibles");
@@ -274,6 +234,12 @@ export default function HomeScreen() {
         } catch (error) {
             console.error("Error obteniendo detalles del restaurante:", error);
         }
+    };
+
+    const handleReviewSubmit = async (restaurantId: number, reviewData: any) => {
+      const updatedReviews = { ...reviews, [restaurantId]: reviewData };
+      setReviews(updatedReviews);
+      await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(reviewData));
     };
 
     return (
@@ -325,6 +291,7 @@ export default function HomeScreen() {
 
             {selectedRestaurant && ( // Asegúrate de que esto esté fuera del modal
                 <RestaurantInfoCard
+                    restaurantId={selectedRestaurant.id}
                     name={selectedRestaurant.name}
                     address={selectedRestaurant.address || "Dirección no disponible"} // Proporcionar un valor por defecto
                     phone={selectedRestaurant.phone || "Teléfono no disponible"} // Proporcionar un valor por defecto
