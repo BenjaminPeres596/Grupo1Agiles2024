@@ -18,8 +18,10 @@ import * as Location from "expo-location";
 import Header from "@/components/Header";
 import Busqueda from "@/components/Busqueda";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Slider from "@react-native-community/slider";
+import distancefilter from "@/components/distancefilter";
+import DistanceFilter from "@/components/distancefilter";
 
 // Definir el tipo para representar la ubicación del usuario
 type LocationType = {
@@ -46,10 +48,22 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [isDistanceFilterVisible, setIsDistanceFilterVisible] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   // Estado para el restaurante que se selecciona
-  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<FoodPoint | null>(null);
   const [reviews, setReviews] = useState<{ [key: number]: any }>({}); // Estado para las reseñas
+
+  const [maxDistance, setmaxDistance] = useState(15000);
+  // Función para actualizar la distancia máxima
+  const handleDistanceChange = (distance: number) => {
+    setmaxDistance(distance);
+    // Aquí puedes volver a buscar restaurantes si es necesario
+    if (location) {
+      fetchRestaurants(location.latitude, location.longitude);
+    }
+  };
 
   // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
   const parallaxScrollViewRef = useRef<any>(null);
@@ -71,31 +85,41 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    console.log("Restaurante seleccionado:", selectedRestaurant);
-  }, [selectedRestaurant]);
-
   const fetchRestaurants = async (latitude: number, longitude: number) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&type=restaurant&key=${API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${maxDistance}&type=restaurant&key=${API_KEY}`;
+    console.log("URL:", url);
 
     try {
       const response = await fetch(url);
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
-        // Mapeo de los resultados a nuestro estado de nearbyRestaurants
         const filteredRestaurants = data.results.map((place: any) => ({
-          id: place.place_id, // ID que traemos desde la respuesta de la API
+          id: place.place_id,
           name: place.name,
           latitude: place.geometry.location.lat,
           longitude: place.geometry.location.lng,
         }));
-        // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev)
-        // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants)
-        // Finalmente se devuelve una nueva lista con todos los restaurantes juntos
-        setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
-        setNextPageToken(data.next_page_token || null); // Guardamos el token de la siguiente página
+
+        const uniqueRestaurants = filteredRestaurants.filter(
+          (FoodPoint: FoodPoint) =>
+            !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
+        );
+
+        setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
+        setNextPageToken(data.next_page_token || null);
+
+        // Llamamos a loadMoreRestaurants automáticamente si hay un nextPageToken
+        // Espera 2 segundos antes de hacer la segunda llamada
+        if (data.next_page_token) {
+          console.log("Llamado a funcion.");
+          setTimeout(() => {
+            loadMoreRestaurants(data.next_page_token);
+          }, 2000); // Espera 2 segundos
+        } else {
+          console.log("No se encontraron más resultados.");
+        }
       } else {
         console.log("No se encontraron resultados");
       }
@@ -104,36 +128,44 @@ export default function HomeScreen() {
     }
   };
 
-  // Función para cargar más restaurantes cuando se llega al final de la lista (con el nextPageToken en caso de que exista)
-  const loadMoreRestaurants = async () => {
-    if (nextPageToken) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${nextPageToken}&key=${API_KEY}`;
+  const loadMoreRestaurants = async (token: string) => {
+    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${token}&key=${API_KEY}`;
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
+    console.log("URL loadMoreRestaurants:", url);
 
-        if (data.results && data.results.length > 0) {
-          const filteredRestaurants = data.results.map((place: any) => ({
-            id: place.place_id,
-            name: place.name,
-            latitude: place.geometry.location.lat,
-            longitude: place.geometry.location.lng,
-          }));
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
 
-          // La expresión ...prev agrega todos los elementos que ya estaban en la lista anterior de restaurantes (prev).
-          // La expresión ...filteredRestaurants añade los nuevos restaurantes obtenidos de la API (filteredRestaurants).
-          // Finalmente se forma una lista con todos los restaurantes juntos.
-          setNearbyRestaurants((prev) => [...prev, ...filteredRestaurants]);
-          setNextPageToken(data.next_page_token || null);
-        } else {
-          console.log("No hay restaurantes cercanos.");
+      if (data.results && data.results.length > 0) {
+        const filteredRestaurants = data.results.map((place: any) => ({
+          id: place.place_id,
+          name: place.name,
+          latitude: place.geometry.location.lat,
+          longitude: place.geometry.location.lng,
+        }));
+
+        const uniqueRestaurants = filteredRestaurants.filter(
+          (FoodPoint: FoodPoint) =>
+            !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
+        );
+        setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
+        setNextPageToken(data.next_page_token || null);
+
+        // Continuamos llamando a loadMoreRestaurants si hay un nextPageToken adicional
+        // Espera 2 segundos antes de hacer la segunda llamada
+        if (data.next_page_token) {
+          console.log("Llamado a funcion.");
+          setTimeout(() => {
+            loadMoreRestaurants(data.next_page_token);
+          }, 2000); // Espera 2 segundos
         }
-      } catch (error) {
-        console.error("Error al hacer fetch:", error);
+      } else {
+        console.log("No hay restaurantes cercanos.");
       }
+    } catch (error) {
+      console.error("Error al hacer fetch:", error);
     }
   };
 
@@ -160,7 +192,7 @@ export default function HomeScreen() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         });
-      // Obtener restaurantes cercanos
+        // Obtener restaurantes cercanos
         await fetchRestaurants(userLatitude, userLongitude);
       } catch (error) {
         console.error("Error obteniendo la ubicación:", error);
@@ -170,13 +202,22 @@ export default function HomeScreen() {
     })();
   }, []);
 
+  useEffect(() => {
+    setIsDistanceFilterVisible(!selectedRestaurant);
+  }, [selectedRestaurant]);
+
   const closeModal = () => {
     setModalVisible(false);
     setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
   };
 
   // Función para calcular la distancia entre dos puntos geograficos
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) => {
     const R = 6371e3; // Radio de la Tierra en metros
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
@@ -192,9 +233,20 @@ export default function HomeScreen() {
   };
 
   // Filtrar restaurantes en base al texto de búsqueda
-  const filteredRestaurants = nearbyRestaurants.filter((restaurant) =>
-    restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
-  );
+  const filteredRestaurants = nearbyRestaurants.filter((restaurant) => {
+    // Usa el encadenamiento opcional para evitar errores si location es null
+    const distance = calculateDistance(
+      location?.latitude || 0, // Proporciona un valor por defecto si location es null
+      location?.longitude || 0, // Proporciona un valor por defecto si location es null
+      restaurant.latitude,
+      restaurant.longitude
+    );
+
+    return (
+      restaurant.name.toLowerCase().startsWith(searchText.toLowerCase()) &&
+      distance <= maxDistance // Verifica si la distancia está dentro del límite
+    );
+  });
 
   // Manejar la selección del restaurante desde el componente Busqueda
   // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
@@ -269,6 +321,11 @@ export default function HomeScreen() {
         onSearchPress={() => setModalVisible(true)}
       />
 
+      {/* Renderiza el filtro de distancia solo si no hay un restaurante seleccionado */}
+      {isDistanceFilterVisible && (
+        <DistanceFilter onDistanceChange={handleDistanceChange} />
+      )}
+
       <View style={styles.mapContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
@@ -280,7 +337,7 @@ export default function HomeScreen() {
             showsUserLocation={true}
           >
             {filteredRestaurants.map((restaurant, index) => {
-              const isActive = selectedRestaurant?.id === restaurant.id; // Verifica si el restaurante está seleccionado
+              const isActive = selectedRestaurant?.id === restaurant.id;
               return (
                 <Marker
                   key={`restaurant-${restaurant.id}-${index}-${isActive ? "active" : "inactive"}`}
@@ -291,7 +348,7 @@ export default function HomeScreen() {
                   }}
                   title={restaurant.name}
                   description="Restaurante sin gluten"
-                  onPress={() => handleMarkerPress(restaurant)} // Agrega manejador aquí
+                  onPress={() => handleMarkerPress(restaurant)}
                 />
               );
             })}
@@ -308,24 +365,26 @@ export default function HomeScreen() {
           restaurants={[...filteredRestaurants]}
           onClose={() => setModalVisible(false)}
           onSelectRestaurant={(restaurant: FoodPoint) => {
-            handleRestaurantSelect(restaurant); // Llama a esta función para manejar la selección
+            handleRestaurantSelect(restaurant);
           }}
         />
       </Modal>
 
-            {selectedRestaurant && ( // Asegúrate de que esto esté fuera del modal
-                <RestaurantInfoCard
-                    restaurantId={selectedRestaurant.id}
-                    name={selectedRestaurant.name}
-                    address={selectedRestaurant.address || "Dirección no disponible"} // Proporcionar un valor por defecto
-                    phone={selectedRestaurant.phone || "Teléfono no disponible"} // Proporcionar un valor por defecto
-                    description={selectedRestaurant.description || "Descripción no disponible"} // Proporcionar un valor por defecto
-                    image={selectedRestaurant.image || "https://via.placeholder.com/150"} // Proporcionar un valor por defecto
-                    onClose={closeModal}
-                />
-            )}
-        </View>
-    );
+      {selectedRestaurant && (
+        <RestaurantInfoCard
+          restaurantId={selectedRestaurant.id}
+          name={selectedRestaurant.name}
+          address={selectedRestaurant.address || "Dirección no disponible"}
+          phone={selectedRestaurant.phone || "Teléfono no disponible"}
+          description={
+            selectedRestaurant.description || "Descripción no disponible"
+          }
+          image={selectedRestaurant.image || "https://via.placeholder.com/150"}
+          onClose={closeModal}
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -356,5 +415,13 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginRight: 8,
+  },
+  distanceFilterContainer: {
+    position: "absolute",
+    top: 100,
+    left: 250,
+    right: 20,
+    zIndex: 10,
+    paddingHorizontal: 10,
   },
 });
