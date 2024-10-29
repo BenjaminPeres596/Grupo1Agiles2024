@@ -55,14 +55,6 @@ export default function HomeScreen() {
   const parallaxScrollViewRef = useRef<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const [searchText, setSearchText] = useState("");
-  const handleMarkerPress = (restaurant: FoodPoint) => {
-      fetchRestaurantDetails(restaurant.id.toString()); // Obtiene los detalles del restaurante
-      setSelectedRestaurant(restaurant); // Establecer el restaurante seleccionado
-      setModalVisible(false); // Cerrar el modal de búsqueda si está abierto
-  };
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<FoodPoint | null>(null);
-  const [searchText, setSearchText] = useState("");
   const mapRef = useRef<MapView>(null);
 
   const handleMarkerPress = (restaurant: FoodPoint) => {

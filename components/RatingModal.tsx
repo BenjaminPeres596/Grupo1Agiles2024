@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AirbnbRating } from 'react-native-ratings';
+import StarRating from 'react-native-star-rating-widget';
 import { CheckBox } from '@rneui/themed';
 
 type RatingModalProps = {
@@ -9,7 +9,10 @@ type RatingModalProps = {
     onClose: () => void;
 };
 
-const RatingModal: React.FC<RatingModalProps> = ({ restaurantId, onClose }) => {
+const RatingModal: React.FC<RatingModalProps> = ({
+    restaurantId = '',
+    onClose = () => {},
+}) => {
     const [rating, setRating] = useState(0);
     const [isVegan, setIsVegan] = useState(false);
     const [isVegetarian, setIsVegetarian] = useState(false);
@@ -37,36 +40,45 @@ const RatingModal: React.FC<RatingModalProps> = ({ restaurantId, onClose }) => {
             isGlutenFree,
         };
         await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(ratingData));
-        console.log(`Rating data saved for restaurant ID: ${restaurantId}`, ratingData);
+        console.log(`Datos de calificación guardados para el restaurante ID: ${restaurantId}`, ratingData);
         onClose();
     };
 
     return (
         <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Califica el Restaurante</Text>
-            <AirbnbRating
-                count={5}
-                defaultRating={rating}
-                onFinishRating={setRating}
-                size={20}
+            <StarRating
+                rating={rating}
+                onChange={setRating}
+                starSize={40}
+                color="#FFD700"
+                style={styles.starRating}
             />
-            <CheckBox
-                title="Opciones Veganas"
-                checked={isVegan}
-                onPress={() => setIsVegan(!isVegan)}
-            />
-            <CheckBox
-                title="Opciones Vegetarianas"
-                checked={isVegetarian}
-                onPress={() => setIsVegetarian(!isVegetarian)}
-            />
-            <CheckBox
-                title="Opciones Sin Gluten"
-                checked={isGlutenFree}
-                onPress={() => setIsGlutenFree(!isGlutenFree)}
-            />
-            <Button title="Guardar" onPress={handleSaveRating} />
-            <Button title="Cancelar" onPress={onClose} />
+            <View style={styles.checkboxContainer}>
+                <CheckBox
+                    title="Opciones Veganas"
+                    checked={isVegan}
+                    onPress={() => setIsVegan(!isVegan)}
+                />
+                <CheckBox
+                    title="Opciones Vegetarianas"
+                    checked={isVegetarian}
+                    onPress={() => setIsVegetarian(!isVegetarian)}
+                />
+                <CheckBox
+                    title="Opciones Sin Gluten"
+                    checked={isGlutenFree}
+                    onPress={() => setIsGlutenFree(!isGlutenFree)}
+                />
+            </View>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={handleSaveRating}>
+                    <Text style={styles.buttonText}>GUARDAR</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={onClose}>
+                    <Text style={styles.buttonText}>CANCELAR</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -78,12 +90,38 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: 'white',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 10,
+        elevation: 5,
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
         textAlign: 'center',
+        color: '#333',
+    },
+    starRating: {
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    checkboxContainer: {
+        marginBottom: 20,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+    },
+    button: {
+        backgroundColor: '#007BFF',
+        padding: 10,
+        borderRadius: 5,
+        width: '40%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
     },
 });
