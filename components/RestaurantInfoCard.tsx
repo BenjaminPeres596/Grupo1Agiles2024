@@ -11,7 +11,7 @@ import {
 import RatingModal from './RatingModal';
 
 type RestaurantInfoCardProps = {
-    restaurantId: number;
+    restaurantId: string;
     name: string;
     address: string;
     phone: string;

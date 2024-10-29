@@ -5,7 +5,7 @@ import { AirbnbRating } from 'react-native-ratings';
 import { CheckBox } from '@rneui/themed';
 
 type RatingModalProps = {
-    restaurantId: number;
+    restaurantId: string;
     onClose: () => void;
 };
 
@@ -37,6 +37,7 @@ const RatingModal: React.FC<RatingModalProps> = ({ restaurantId, onClose }) => {
             isGlutenFree,
         };
         await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(ratingData));
+        console.log(`Rating data saved for restaurant ID: ${restaurantId}`, ratingData);
         onClose();
     };
 

@@ -30,7 +30,7 @@ type LocationType = {
 } | null;
 
 type FoodPoint = {
-  id: number;
+  id: string;
   name: string;
   latitude: number;
   longitude: number;
@@ -201,7 +201,7 @@ export default function HomeScreen() {
 
             if (data.result) {
                 const restaurantDetails = {
-                    id: placeId,
+                    id: data.result.place_id,
                     name: data.result.name,
                     address: data.result.formatted_address || "Dirección no disponible",
                     phone: data.result.formatted_phone_number || "Teléfono no disponible",
@@ -209,8 +209,8 @@ export default function HomeScreen() {
                     image: data.result.photos && data.result.photos.length > 0
                         ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${data.result.photos[0].photo_reference}&key=${API_KEY}`
                         : "https://via.placeholder.com/150",
-                    latitude: null, // Establecer como null si no está disponible
-                    longitude: null,
+                    latitude: data.result.geometry.location.lat, // Establecer como null si no está disponible
+                    longitude: data.result.geometry.location.lng,
                 };
 
                                 // Cargar reseñas del restaurante desde AsyncStorage
@@ -218,7 +218,7 @@ export default function HomeScreen() {
                 const parsedReviews = storedReviews ? JSON.parse(storedReviews) : null;
 
                 setSelectedRestaurant({
-                    id: Number(restaurantDetails.id), // Convertir a number
+                    id: restaurantDetails.id, // Convertir a number
                     name: restaurantDetails.name,
                     address: restaurantDetails.address,
                     phone: restaurantDetails.phone,
