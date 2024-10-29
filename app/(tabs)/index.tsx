@@ -12,7 +12,7 @@ import {
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Callout } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
 import Header from "@/components/Header";
@@ -37,6 +37,7 @@ type FoodPoint = {
   phone?: string;
   description?: string;
   image?: string;
+  hours?: string;
 };
 
 export default function HomeScreen() {
@@ -183,9 +184,8 @@ export default function HomeScreen() {
     };
 
     const fetchRestaurantDetails = async (placeId: string) => {
-        const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Asegúrate de tener la clave de API correctamente
+        const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Asegúrate de haber configurado la clave correctamente
         const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`;
-
         try {
             const response = await fetch(url);
             const data = await response.json();
@@ -200,17 +200,19 @@ export default function HomeScreen() {
                     image: data.result.photos && data.result.photos.length > 0
                         ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${data.result.photos[0].photo_reference}&key=${API_KEY}`
                         : "https://via.placeholder.com/150",
-                    latitude: null, // Establecer como null si no está disponible
+                    hours: data.result.opening_hours ? data.result.opening_hours.weekday_text.join(", ") : "Horario no disponible",
+                    latitude: null,
                     longitude: null,
                 };
 
                 setSelectedRestaurant({
-                    id: Number(restaurantDetails.id), // Convertir a number
+                    id: Number(restaurantDetails.id),
                     name: restaurantDetails.name,
                     address: restaurantDetails.address,
                     phone: restaurantDetails.phone,
                     description: restaurantDetails.description,
                     image: restaurantDetails.image,
+                    hours: restaurantDetails.hours, // Agregar horas al estado seleccionado
                     latitude: restaurantDetails.latitude !== null ? restaurantDetails.latitude : 0,
                     longitude: restaurantDetails.longitude !== null ? restaurantDetails.longitude : 0,
                 });
@@ -246,8 +248,6 @@ export default function HomeScreen() {
                                     latitude: restaurant.latitude,
                                     longitude: restaurant.longitude,
                                 }}
-                                title={restaurant.name}
-                                description="Restaurante sin gluten"
                                 onPress={() => handleMarkerPress(restaurant)} // Agregar manejador aquí
                             />
                         ))}
@@ -264,23 +264,25 @@ export default function HomeScreen() {
                     restaurants={[...filteredRestaurants]}
                     onClose={() => setModalVisible(false)}
                     onSelectRestaurant={(restaurant: FoodPoint) => {
-                        handleRestaurantSelect(restaurant); // Llama a esta función para manejar la selección
+                        handleRestaurantSelect(restaurant);
                     }}
                 />
             </Modal>
 
-            {selectedRestaurant && ( // Asegúrate de que esto esté fuera del modal
+            {selectedRestaurant && (
                 <RestaurantInfoCard
                     name={selectedRestaurant.name}
-                    address={selectedRestaurant.address || "Dirección no disponible"} // Proporcionar un valor por defecto
-                    phone={selectedRestaurant.phone || "Teléfono no disponible"} // Proporcionar un valor por defecto
-                    description={selectedRestaurant.description || "Descripción no disponible"} // Proporcionar un valor por defecto
-                    image={selectedRestaurant.image || "https://via.placeholder.com/150"} // Proporcionar un valor por defecto
+                    address={selectedRestaurant.address || "Dirección no disponible"}
+                    phone={selectedRestaurant.phone || "Teléfono no disponible"}
+                    description={selectedRestaurant.description || "Descripción no disponible"}
+                    image={selectedRestaurant.image || "https://via.placeholder.com/150"}
+                    hours={selectedRestaurant.hours || "Horario no disponible"} // Pasar horario como prop
                     onClose={closeModal}
                 />
             )}
         </View>
     );
+
 }
 
 
