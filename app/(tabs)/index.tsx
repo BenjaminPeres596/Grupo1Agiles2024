@@ -19,6 +19,9 @@ import Header from "@/components/Header";
 import Busqueda from "@/components/Busqueda";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
+import distancefilter from "@/components/distancefilter";
+import DistanceFilter from "@/components/distancefilter";
 
 
 // Definir el tipo para representar la ubicación del usuario
@@ -50,6 +53,17 @@ export default function HomeScreen() {
   // Estado para el restaurante que se selecciona
   const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
   const [reviews, setReviews] = useState<{ [key: number]: any }>({}); // Estado para las reseñas
+  
+  
+  const [maxDistance, setmaxDistance] = useState (15000)
+    // Función para actualizar la distancia máxima
+    const handleDistanceChange = (distance: number) => {
+      setmaxDistance(distance);
+      // Aquí puedes volver a buscar restaurantes si es necesario
+      if (location) {
+        fetchRestaurants(location.latitude, location.longitude);
+      }
+    };
 
   // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
   const parallaxScrollViewRef = useRef<any>(null);
@@ -77,7 +91,7 @@ export default function HomeScreen() {
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&type=restaurant&key=${API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${maxDistance}&type=restaurant&key=${API_KEY}`;
 
     try {
       const response = await fetch(url);
@@ -192,9 +206,22 @@ export default function HomeScreen() {
   };
 
   // Filtrar restaurantes en base al texto de búsqueda
-  const filteredRestaurants = nearbyRestaurants.filter((restaurant) =>
-    restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
-  );
+  const filteredRestaurants = nearbyRestaurants.filter((restaurant) => {
+    // Usa el encadenamiento opcional para evitar errores si location es null
+    const distance = calculateDistance(
+      location?.latitude || 0, // Proporciona un valor por defecto si location es null
+      location?.longitude || 0, // Proporciona un valor por defecto si location es null
+      restaurant.latitude,
+      restaurant.longitude
+    );
+  
+    console.log(location?.latitude); // Esto imprimirá la latitud si location no es null
+  
+    return (
+      restaurant.name.toLowerCase().startsWith(searchText.toLowerCase()) &&
+      distance <= maxDistance // Verifica si la distancia está dentro del límite
+    );
+  });
 
   // Manejar la selección del restaurante desde el componente Busqueda
   // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
@@ -268,6 +295,8 @@ export default function HomeScreen() {
         onProfilePress={() => console.log("Perfil presionado")}
         onSearchPress={() => setModalVisible(true)}
       />
+      
+    <DistanceFilter onDistanceChange={handleDistanceChange} />
 
       <View style={styles.mapContainer}>
         {loading ? (
