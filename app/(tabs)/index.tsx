@@ -50,6 +50,7 @@ export default function HomeScreen() {
   const mapRef = useRef<MapView>(null);
 
   const handleMarkerPress = (restaurant: FoodPoint) => {
+    fetchRestaurantDetails(restaurant.id.toString()); // Obtiene los detalles del restaurante
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
     if (mapRef.current) {
@@ -165,6 +166,7 @@ export default function HomeScreen() {
   // Manejar la selección del restaurante desde el componente Busqueda
   // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
   const handleRestaurantSelect = (restaurant: FoodPoint) => {
+    fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
     if (mapRef.current) {
