@@ -6,11 +6,13 @@ import { DrawerActions } from "@react-navigation/native";
 
 interface HeaderProps {
   title: string;
+  onProfilePress?: () => void; // Para manejar el click en el perfil
   onSearchPress?: () => void; // Propiedad para manejar el evento de la búsqueda
 }
 
 const Header: React.FC<HeaderProps> = ({
   title,
+  onProfilePress,
   onSearchPress,
 }) => {
 
@@ -18,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <View style={styles.headerContainer}>
-      <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.iconContainer}>
+      <TouchableOpacity onPress={ onProfilePress } style={styles.iconContainer}>
         <Ionicons name="person-circle-outline" size={32} color="white" />
       </TouchableOpacity>
 

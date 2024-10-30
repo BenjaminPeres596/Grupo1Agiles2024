@@ -20,6 +20,7 @@ type RestaurantInfoCardProps = {
     description: string;
     image: string;
     onClose: () => void;
+    onFavoriteUpdate: (favoriteIds: string[]) => void;
 };
 
 const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
@@ -30,6 +31,7 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     description,
     image,
     onClose,
+    onFavoriteUpdate,
 }) => {
     const [modalVisible, setModalVisible] = React.useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -37,9 +39,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     useEffect(() => {
         const fetchFavoriteStatus = async () => {
             try {
-                const favoriteStatus = await AsyncStorage.getItem(`favorite_${restaurantId}`);
-                if (favoriteStatus !== null) {
-                    setIsFavorite(JSON.parse(favoriteStatus));
+                const favoriteIds = await AsyncStorage.getItem('favoriteRestaurants');
+                if (favoriteIds) {
+                    const favorites = JSON.parse(favoriteIds);
+                    setIsFavorite(favorites.includes(restaurantId)); // Verifica si el ID está en la lista
                 }
             } catch (error) {
                 console.error("Error fetching favorite status:", error);
@@ -47,12 +50,30 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
         };
         fetchFavoriteStatus();
     }, [restaurantId]);
-
+    
     const toggleFavorite = async () => {
         try {
+            const favoriteIds = await AsyncStorage.getItem('favoriteRestaurants');
+            const favorites = favoriteIds ? JSON.parse(favoriteIds) : [];
             const newFavoriteStatus = !isFavorite;
-            setIsFavorite(newFavoriteStatus);
-            await AsyncStorage.setItem(`favorite_${restaurantId}`, JSON.stringify(newFavoriteStatus));
+    
+            if (newFavoriteStatus) {
+                // Agregar a la lista de favoritos
+                if (!favorites.includes(restaurantId)) {
+                    favorites.push(restaurantId);
+                }
+            } else {
+                // Eliminar de la lista de favoritos
+                const index = favorites.indexOf(restaurantId);
+                if (index > -1) {
+                    favorites.splice(index, 1);
+                }
+            }
+    
+            // Guardar la lista actualizada en AsyncStorage
+            await AsyncStorage.setItem('favoriteRestaurants', JSON.stringify(favorites));
+            setIsFavorite(newFavoriteStatus); // Actualiza el estado local
+            onFavoriteUpdate(favorites); // Llama al método para pasar la lista actualizada al componente padre
         } catch (error) {
             console.error("Error saving favorite status:", error);
         }
