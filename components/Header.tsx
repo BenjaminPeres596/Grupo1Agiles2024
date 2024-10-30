@@ -1,21 +1,24 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { DrawerActions } from "@react-navigation/native";
 
 interface HeaderProps {
   title: string;
-  onProfilePress?: () => void;
   onSearchPress?: () => void; // Propiedad para manejar el evento de la búsqueda
 }
 
 const Header: React.FC<HeaderProps> = ({
   title,
-  onProfilePress,
   onSearchPress,
 }) => {
+
+  const navigation = useNavigation();
+
   return (
     <View style={styles.headerContainer}>
-      <TouchableOpacity onPress={onProfilePress} style={styles.iconContainer}>
+      <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.iconContainer}>
         <Ionicons name="person-circle-outline" size={32} color="white" />
       </TouchableOpacity>
 
@@ -40,10 +43,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#EF4423",
-    height: 90,
+    height: 80,
     paddingHorizontal: 16,
     marginTop: 0,
-    paddingTop: 25,
+    paddingTop: 20,
   },
   titleContainer: {
     flexDirection: "column",

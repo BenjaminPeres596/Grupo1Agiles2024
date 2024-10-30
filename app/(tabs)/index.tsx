@@ -40,7 +40,8 @@ type FoodPoint = {
   phone?: string;
   description?: string;
   image?: string;
-  reviews?: any[]; // Agregar la propiedad reviews
+  reviews?: any[]; 
+  isFavorite?: boolean;
 };
 
 export default function HomeScreen() {
@@ -317,7 +318,6 @@ export default function HomeScreen() {
     <View style={{ flex: 1 }}>
       <Header
         title="DondeComo"
-        onProfilePress={() => console.log("Perfil presionado")}
         onSearchPress={() => setModalVisible(true)}
       />
 

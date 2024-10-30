@@ -36,18 +36,26 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 
     useEffect(() => {
         const fetchFavoriteStatus = async () => {
-            const favoriteStatus = await AsyncStorage.getItem(`favorite_${restaurantId}`);
-            if (favoriteStatus !== null) {
-                setIsFavorite(JSON.parse(favoriteStatus));
+            try {
+                const favoriteStatus = await AsyncStorage.getItem(`favorite_${restaurantId}`);
+                if (favoriteStatus !== null) {
+                    setIsFavorite(JSON.parse(favoriteStatus));
+                }
+            } catch (error) {
+                console.error("Error fetching favorite status:", error);
             }
         };
         fetchFavoriteStatus();
     }, [restaurantId]);
 
     const toggleFavorite = async () => {
-        const newFavoriteStatus = !isFavorite;
-        setIsFavorite(newFavoriteStatus);
-        await AsyncStorage.setItem(`favorite_${restaurantId}`, JSON.stringify(newFavoriteStatus));
+        try {
+            const newFavoriteStatus = !isFavorite;
+            setIsFavorite(newFavoriteStatus);
+            await AsyncStorage.setItem(`favorite_${restaurantId}`, JSON.stringify(newFavoriteStatus));
+        } catch (error) {
+            console.error("Error saving favorite status:", error);
+        }
     };
 
     return (
