@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,8 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import RatingModal from './RatingModal';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RestaurantInfoCardProps = {
     restaurantId: string;
@@ -30,10 +32,32 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     onClose,
 }) => {
     const [modalVisible, setModalVisible] = React.useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    useEffect(() => {
+        const fetchFavoriteStatus = async () => {
+            const favoriteStatus = await AsyncStorage.getItem(`favorite_${restaurantId}`);
+            if (favoriteStatus !== null) {
+                setIsFavorite(JSON.parse(favoriteStatus));
+            }
+        };
+        fetchFavoriteStatus();
+    }, [restaurantId]);
+
+    const toggleFavorite = async () => {
+        const newFavoriteStatus = !isFavorite;
+        setIsFavorite(newFavoriteStatus);
+        await AsyncStorage.setItem(`favorite_${restaurantId}`, JSON.stringify(newFavoriteStatus));
+    };
 
     return (
         <View style={styles.card}>
             <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+
+            <TouchableOpacity style={styles.heartButton} onPress={toggleFavorite}>
+                <Icon name={isFavorite ? "heart" : "heart-o"} size={24} color="#FF4D4D" />
+            </TouchableOpacity>
+
             <View style={styles.infoContainer}>
                 <Text style={styles.title}>{name}</Text>
                 <Text style={styles.address}>{address}</Text>
@@ -78,6 +102,15 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 180, // Reducido el tamaño de la imagen
         borderRadius: 8,
+    },
+    heartButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Fondo opcional para el botón
+        borderRadius: 25,
+        padding: 5,
+        elevation: 5, // Para dar sombra
     },
     infoContainer: {
         padding: 8, // Reducido el padding
