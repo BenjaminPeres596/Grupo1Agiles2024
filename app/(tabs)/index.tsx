@@ -22,7 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import distancefilter from "@/components/distancefilter";
 import DistanceFilter from "@/components/distancefilter";
-import Favoritos from "@/components/favorites";
+import Favoritos from "@/components/Favorites";
 
 // Definir el tipo para representar la ubicación del usuario
 type LocationType = {
