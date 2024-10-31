@@ -92,12 +92,17 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                 <Text style={styles.address}>{address}</Text>
                 <Text style={styles.phone}>{phone}</Text>
                 <TouchableOpacity
-                    style={styles.button}
+                    style={styles.buttonQualify}
                     onPress={() => setModalVisible(true)}
                 >
                     <Text style={styles.buttonText}>Calificar</Text>
                 </TouchableOpacity>
-                <Button title="Cerrar" color="#FF4D4D" onPress={onClose} />
+                <TouchableOpacity
+                    style={styles.buttonClose}
+                    onPress={onClose}
+                >
+                    <Text style={styles.buttonText}>Cerrar</Text>
+                </TouchableOpacity>
             </View>
             <Modal
                 visible={modalVisible}
@@ -129,8 +134,9 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 180, // Reducido el tamaño de la imagen
+        height: 120, // Reducido el tamaño de la imagen
         borderRadius: 8,
+        marginBottom: -8,
     },
     heartButton: {
         position: 'absolute',
@@ -145,24 +151,33 @@ const styles = StyleSheet.create({
         padding: 8, // Reducido el padding
     },
     title: {
-        fontSize: 20, // Reducido el tamaño de la fuente
+        fontSize: 23, // Reducido el tamaño de la fuente
         fontWeight: 'bold',
+        textTransform: 'uppercase',
         color: '#FFFFFF',
-        marginBottom: 4, // Reducido el margen
+        marginBottom: -1, // Reducido el margen
     },
     address: {
         fontSize: 14, // Reducido el tamaño de la fuente
+        fontWeight: 'bold',
         color: 'rgba(255, 255, 255, 0.8)',
-        marginBottom: 4,
+        marginBottom: 1,
     },
     phone: {
-        fontSize: 14, // Reducido el tamaño de la fuente
+        fontSize: 12, // Reducido el tamaño de la fuente
         color: 'rgba(255, 255, 255, 0.8)',
         marginBottom: 8,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 8, // Reducido el padding
+    buttonQualify: {
+        backgroundColor: '#FF4D4D',
+        padding: 6, // Reducido el padding
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 7,
+    },
+    buttonClose: {
+        backgroundColor: '#0D73AB',
+        padding: 6, // Reducido el padding
         borderRadius: 5,
         alignItems: 'center',
     },

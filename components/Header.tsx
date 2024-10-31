@@ -45,10 +45,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#EF4423",
-    height: 80,
+    height: 90,
     paddingHorizontal: 16,
     marginTop: 0,
-    paddingTop: 20,
+    paddingTop: 25,
   },
   titleContainer: {
     flexDirection: "column",

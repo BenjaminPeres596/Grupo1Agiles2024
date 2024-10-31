@@ -256,7 +256,7 @@ export default function HomeScreen() {
 
   // Manejar la selección del restaurante desde el componente Busqueda
   // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
-  const handleRestaurantSelect = (restaurant: FoodPoint) => {
+  const handleRestaurantSearchSelect = (restaurant: FoodPoint) => {
     fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
@@ -345,6 +345,19 @@ export default function HomeScreen() {
     setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
   };
 
+  const handleRestaurantFavoriteSelect = (restaurant: FoodPoint) => {
+    fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
+    setSelectedRestaurant(restaurant);
+    setFavoritesVisible(false);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: restaurant.latitude - 0.0025,
+        longitude: restaurant.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -398,7 +411,7 @@ export default function HomeScreen() {
           restaurants={[...filteredRestaurants]}
           onClose={() => setModalVisible(false)}
           onSelectRestaurant={(restaurant: FoodPoint) => {
-            handleRestaurantSelect(restaurant);
+            handleRestaurantSearchSelect(restaurant);
           }}
         />
       </Modal>
@@ -408,9 +421,7 @@ export default function HomeScreen() {
           restaurants={[...filteredRestaurants]}
           favoriteIds={favoriteIds} 
           onClose={() => setFavoritesVisible(false)}
-          onSelectRestaurant={(restaurant: FoodPoint) => {
-            handleRestaurantSelect(restaurant);
-          }}
+          onSelectRestaurant={handleRestaurantFavoriteSelect}
         />
       </Modal>
 

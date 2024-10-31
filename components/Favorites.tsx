@@ -63,8 +63,8 @@ const Favoritos: React.FC<FavoritesProps> = ({
             )}
           />
         )}
-        <Pressable onPress={onClose}>
-          <Text style={styles.closeButton}>Cerrar</Text>
+        <Pressable onPress={onClose} style={styles.closeButton}>
+          <Text style={styles.buttonText}>Cerrar</Text>
         </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -98,9 +98,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   closeButton: {
-    color: "blue",
-    marginTop: 16,
-    textAlign: "center",
+    backgroundColor: '#0D73AB',
+    padding: 8, // Reducido el padding
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FBFEF9',
+    fontSize: 14, // Reducido el tamaño de la fuente
+    fontWeight: 'bold',
   },
   restaurantCard: {
     flexDirection: "row",
