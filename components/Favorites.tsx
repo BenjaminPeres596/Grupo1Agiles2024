@@ -45,6 +45,7 @@ const Favoritos: React.FC<FavoritesProps> = ({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 32 : 0} // Ajusta según sea necesario
       >
+        <Text style={styles.title}>Mis Favoritos</Text>
         {filteredRestaurants.length > 0 && (
           <FlatList
             data={filteredRestaurants}
@@ -71,6 +72,11 @@ const Favoritos: React.FC<FavoritesProps> = ({
 };
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "Black",
+  },
   safeContainer: {
     flex: 1,
     backgroundColor: "white",
