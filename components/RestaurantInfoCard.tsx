@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,8 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import RatingModal from './RatingModal';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RestaurantInfoCardProps = {
     restaurantId: string;
@@ -18,6 +20,7 @@ type RestaurantInfoCardProps = {
     description: string;
     image: string;
     onClose: () => void;
+    onFavoriteUpdate: (favoriteIds: string[]) => void;
 };
 
 const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
@@ -28,23 +31,78 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     description,
     image,
     onClose,
+    onFavoriteUpdate,
 }) => {
     const [modalVisible, setModalVisible] = React.useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    useEffect(() => {
+        const fetchFavoriteStatus = async () => {
+            try {
+                const favoriteIds = await AsyncStorage.getItem('favoriteRestaurants');
+                if (favoriteIds) {
+                    const favorites = JSON.parse(favoriteIds);
+                    setIsFavorite(favorites.includes(restaurantId)); // Verifica si el ID está en la lista
+                }
+            } catch (error) {
+                console.error("Error fetching favorite status:", error);
+            }
+        };
+        fetchFavoriteStatus();
+    }, [restaurantId]);
+    
+    const toggleFavorite = async () => {
+        try {
+            const favoriteIds = await AsyncStorage.getItem('favoriteRestaurants');
+            const favorites = favoriteIds ? JSON.parse(favoriteIds) : [];
+            const newFavoriteStatus = !isFavorite;
+    
+            if (newFavoriteStatus) {
+                // Agregar a la lista de favoritos
+                if (!favorites.includes(restaurantId)) {
+                    favorites.push(restaurantId);
+                }
+            } else {
+                // Eliminar de la lista de favoritos
+                const index = favorites.indexOf(restaurantId);
+                if (index > -1) {
+                    favorites.splice(index, 1);
+                }
+            }
+    
+            // Guardar la lista actualizada en AsyncStorage
+            await AsyncStorage.setItem('favoriteRestaurants', JSON.stringify(favorites));
+            setIsFavorite(newFavoriteStatus); // Actualiza el estado local
+            onFavoriteUpdate(favorites); // Llama al método para pasar la lista actualizada al componente padre
+        } catch (error) {
+            console.error("Error saving favorite status:", error);
+        }
+    };
 
     return (
         <View style={styles.card}>
             <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+
+            <TouchableOpacity style={styles.heartButton} onPress={toggleFavorite}>
+                <Icon name={isFavorite ? "heart" : "heart-o"} size={24} color="#FF4D4D" />
+            </TouchableOpacity>
+
             <View style={styles.infoContainer}>
                 <Text style={styles.title}>{name}</Text>
                 <Text style={styles.address}>{address}</Text>
                 <Text style={styles.phone}>{phone}</Text>
                 <TouchableOpacity
-                    style={styles.button}
+                    style={styles.buttonQualify}
                     onPress={() => setModalVisible(true)}
                 >
                     <Text style={styles.buttonText}>Calificar</Text>
                 </TouchableOpacity>
-                <Button title="Cerrar" color="#FF4D4D" onPress={onClose} />
+                <TouchableOpacity
+                    style={styles.buttonClose}
+                    onPress={onClose}
+                >
+                    <Text style={styles.buttonText}>Cerrar</Text>
+                </TouchableOpacity>
             </View>
             <Modal
                 visible={modalVisible}
@@ -76,31 +134,50 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 180, // Reducido el tamaño de la imagen
+        height: 120, // Reducido el tamaño de la imagen
         borderRadius: 8,
+        marginBottom: -8,
+    },
+    heartButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Fondo opcional para el botón
+        borderRadius: 25,
+        padding: 5,
+        elevation: 5, // Para dar sombra
     },
     infoContainer: {
         padding: 8, // Reducido el padding
     },
     title: {
-        fontSize: 20, // Reducido el tamaño de la fuente
+        fontSize: 23, // Reducido el tamaño de la fuente
         fontWeight: 'bold',
+        textTransform: 'uppercase',
         color: '#FFFFFF',
-        marginBottom: 4, // Reducido el margen
+        marginBottom: -1, // Reducido el margen
     },
     address: {
         fontSize: 14, // Reducido el tamaño de la fuente
+        fontWeight: 'bold',
         color: 'rgba(255, 255, 255, 0.8)',
-        marginBottom: 4,
+        marginBottom: 1,
     },
     phone: {
-        fontSize: 14, // Reducido el tamaño de la fuente
+        fontSize: 12, // Reducido el tamaño de la fuente
         color: 'rgba(255, 255, 255, 0.8)',
         marginBottom: 8,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 8, // Reducido el padding
+    buttonQualify: {
+        backgroundColor: '#FF4D4D',
+        padding: 6, // Reducido el padding
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 7,
+    },
+    buttonClose: {
+        backgroundColor: '#0D73AB',
+        padding: 6, // Reducido el padding
         borderRadius: 5,
         alignItems: 'center',
     },

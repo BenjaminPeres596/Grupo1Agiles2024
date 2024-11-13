@@ -22,6 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import distancefilter from "@/components/distancefilter";
 import DistanceFilter from "@/components/distancefilter";
+import Favoritos from "@/components/Favorites";
 
 // Definir el tipo para representar la ubicación del usuario
 type LocationType = {
@@ -40,7 +41,8 @@ type FoodPoint = {
   phone?: string;
   description?: string;
   image?: string;
-  reviews?: any[]; // Agregar la propiedad reviews
+  reviews?: any[]; 
+  isFavorite?: boolean;
 };
 
 export default function HomeScreen() {
@@ -50,6 +52,10 @@ export default function HomeScreen() {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isDistanceFilterVisible, setIsDistanceFilterVisible] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+
+  //para mostrar el listado de favoritos
+  const [favoritesVisible, setFavoritesVisible] = useState(false);
+
   // Estado para el restaurante que se selecciona
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<FoodPoint | null>(null);
@@ -250,7 +256,7 @@ export default function HomeScreen() {
 
   // Manejar la selección del restaurante desde el componente Busqueda
   // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
-  const handleRestaurantSelect = (restaurant: FoodPoint) => {
+  const handleRestaurantSearchSelect = (restaurant: FoodPoint) => {
     fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
@@ -265,7 +271,7 @@ export default function HomeScreen() {
   };
 
   const fetchRestaurantDetails = async (placeId: string) => {
-    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; // Asegúrate de tener la clave de API correctamente
+    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; 
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`;
 
     try {
@@ -313,11 +319,51 @@ export default function HomeScreen() {
     }
   };
 
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+        try {
+            const favoriteIdsString = await AsyncStorage.getItem('favoriteRestaurants');
+            if (favoriteIdsString) {
+                setFavoriteIds(JSON.parse(favoriteIdsString));
+            }
+        } catch (error) {
+            console.error("Error loading favorite IDs:", error);
+        }
+    };
+    loadFavorites();
+}, []);
+
+  // Función para actualizar la lista de favoritos
+  const handleFavoriteUpdate = (updatedFavorites: string[]) => {
+    setFavoriteIds(updatedFavorites);
+  };
+
+  const closeFavorites = () => {
+    setFavoritesVisible(false);
+    setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
+  };
+
+  const handleRestaurantFavoriteSelect = (restaurant: FoodPoint) => {
+    fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
+    setSelectedRestaurant(restaurant);
+    setFavoritesVisible(false);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: restaurant.latitude - 0.0025,
+        longitude: restaurant.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <Header
         title="DondeComo"
-        onProfilePress={() => console.log("Perfil presionado")}
+        onProfilePress={() => setFavoritesVisible(true)}
         onSearchPress={() => setModalVisible(true)}
       />
 
@@ -365,8 +411,17 @@ export default function HomeScreen() {
           restaurants={[...filteredRestaurants]}
           onClose={() => setModalVisible(false)}
           onSelectRestaurant={(restaurant: FoodPoint) => {
-            handleRestaurantSelect(restaurant);
+            handleRestaurantSearchSelect(restaurant);
           }}
+        />
+      </Modal>
+
+      <Modal visible={favoritesVisible} animationType="slide">
+        <Favoritos
+          restaurants={[...filteredRestaurants]}
+          favoriteIds={favoriteIds} 
+          onClose={() => setFavoritesVisible(false)}
+          onSelectRestaurant={handleRestaurantFavoriteSelect}
         />
       </Modal>
 
@@ -381,6 +436,7 @@ export default function HomeScreen() {
           }
           image={selectedRestaurant.image || "https://via.placeholder.com/150"}
           onClose={closeModal}
+          onFavoriteUpdate={handleFavoriteUpdate}
         />
       )}
     </View>

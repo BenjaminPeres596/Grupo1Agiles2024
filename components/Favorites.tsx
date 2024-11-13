@@ -12,13 +12,12 @@ import {
 } from "react-native";
 
 // Define la interfaz para las props que recibe el componente
-interface BusquedaProps {
-  searchText: string;
-  onSearchChange: (text: string) => void;
-  restaurants: FoodPoint[];
-  onClose: () => void;
-  onSelectRestaurant: (restaurant: FoodPoint) => void;
-}
+type FavoritesProps = {
+    restaurants: FoodPoint[]; // Asegúrate de que esto sea el tipo correcto para tus restaurantes
+    favoriteIds: string[]; // Lista de IDs de restaurantes favoritos
+    onClose: () => void;
+    onSelectRestaurant: (restaurant: FoodPoint) => void;
+  };
 
 // Define la interfaz para los puntos de comida
 interface FoodPoint {
@@ -28,20 +27,16 @@ interface FoodPoint {
   longitude: number;
 }
 
-const Busqueda: React.FC<BusquedaProps> = ({
-  searchText,
-  onSearchChange,
-  restaurants,
-  onClose,
-  onSelectRestaurant,
-}) => {
-  // Filtrar restaurantes solo cuando hay texto en el campo de búsqueda
-  const filteredRestaurants =
-    searchText.trim() === ""
-      ? []
-      : restaurants.filter((restaurant) =>
-          restaurant.name.toLowerCase().startsWith(searchText.toLowerCase())
-        );
+const Favoritos: React.FC<FavoritesProps> = ({
+    restaurants,
+    favoriteIds,
+    onClose,
+    onSelectRestaurant,
+  }) => {
+
+    // Filtrar restaurantes que son favoritos y coinciden con el texto de búsqueda
+    const filteredRestaurants = restaurants
+      .filter((restaurant) => favoriteIds.includes(restaurant.id)) // Filtra solo los favoritos
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -50,12 +45,7 @@ const Busqueda: React.FC<BusquedaProps> = ({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 32 : 0} // Ajusta según sea necesario
       >
-        <TextInput
-          style={styles.searchInput}
-          value={searchText}
-          placeholder="Buscar restaurante"
-          onChangeText={onSearchChange}
-        />
+        <Text style={styles.title}>Mis Favoritos</Text>
         {filteredRestaurants.length > 0 && (
           <FlatList
             data={filteredRestaurants}
@@ -82,6 +72,11 @@ const Busqueda: React.FC<BusquedaProps> = ({
 };
 
 const styles = StyleSheet.create({
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "Black",
+  },
   safeContainer: {
     flex: 1,
     backgroundColor: "white",
@@ -133,4 +128,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Busqueda;
+export default Favoritos;
