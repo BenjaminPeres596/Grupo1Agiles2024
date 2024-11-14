@@ -1,8 +1,7 @@
-// components/MapComponent.tsx
-import React, { useRef, useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
-import MapView, { Marker } from "react-native-maps";
-import { ThemedText } from "@/components/ThemedText";
+import React, { useRef, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import { ThemedText } from '@/components/ThemedText';
 
 type LocationType = {
   latitude: number;
@@ -25,7 +24,7 @@ interface MapComponentProps {
   selectedRestaurant: FoodPoint | null;
   handleMarkerPress: (restaurant: FoodPoint) => void;
   handleMapPress: () => void;
-  moveToLocation: (location: LocationType) => void; // Nueva prop para mover el mapa
+  moveToLocation: (location: LocationType) => void;
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({
@@ -67,8 +66,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
             const isActive = selectedRestaurant?.id === restaurant.id;
             return (
               <Marker
-                key={`restaurant-${restaurant.id}-${index}-${isActive ? "active" : "inactive"}`}
-                pinColor={isActive ? "blue" : "red"}
+                key={`restaurant-${restaurant.id}-${index}-${isActive ? 'active' : 'inactive'}`}
+                pinColor={isActive ? 'blue' : 'red'}
                 coordinate={{
                   latitude: restaurant.latitude,
                   longitude: restaurant.longitude,

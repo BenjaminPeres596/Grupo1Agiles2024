@@ -38,12 +38,10 @@ export default function HomeScreen() {
   const [location, setLocation] = useState<LocationType>(null);
   const [loading, setLoading] = useState(true);
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isDistanceFilterVisible, setIsDistanceFilterVisible] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [favoritesVisible, setFavoritesVisible] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
-  const [reviews, setReviews] = useState<{ [key: number]: any }>({});
   const [maxDistance, setmaxDistance] = useState(15000);
   const [searchText, setSearchText] = useState("");
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
@@ -52,12 +50,11 @@ export default function HomeScreen() {
   const handleDistanceChange = (distance: number) => {
     setmaxDistance(distance);
     if (location) {
-      fetchRestaurants(location.latitude, location.longitude);
+      fetchRestaurants();
     }
   };
 
   const handleMarkerPress = (restaurant: FoodPoint) => {
-    fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
   };
@@ -66,75 +63,34 @@ export default function HomeScreen() {
     setSelectedRestaurant(null); // Cerrar el modal del restaurante seleccionado
   };
 
-  const fetchRestaurants = async (latitude: number, longitude: number) => {
-    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${maxDistance}&type=restaurant&key=${API_KEY}`;
-    console.log("URL:", url);
-
-    const response = await fetch(url);
+  const fetchRestaurants = async () => {
+    const url = "https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Restaurantes?select=*";
+    const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU";
+  
+    const response = await fetch(url, {
+      headers: {
+        apikey: apiKey,
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+    
     const data = await response.json();
-
-    if (data.results && data.results.length > 0) {
-      const filteredRestaurants = data.results.map((place: any) => ({
-        id: place.place_id,
-        name: place.name,
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
+  
+    if (data && data.length > 0) {
+      const formattedRestaurants = data.map((restaurant: any) => ({
+        id: restaurant.id,
+        name: restaurant.name,
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        address: restaurant.address || "Dirección no disponible",
+        phone: restaurant.phone || "Teléfono no disponible",
+        description: restaurant.description || "Descripción no disponible",
+        image: restaurant.image || "https://via.placeholder.com/150",
       }));
-
-      const uniqueRestaurants = filteredRestaurants.filter(
-        (FoodPoint: FoodPoint) =>
-          !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
-      );
-
-      setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
-      setNextPageToken(data.next_page_token || null);
-
-      if (data.next_page_token) {
-        console.log("Llamado a funcion.");
-        setTimeout(() => {
-          loadMoreRestaurants(data.next_page_token);
-        }, 2000);
-      } else {
-        console.log("No se encontraron más resultados.");
-      }
+  
+      setNearbyRestaurants(formattedRestaurants);
     } else {
-      console.log("No se encontraron resultados");
-    }
-  };
-
-  const loadMoreRestaurants = async (token: string) => {
-    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${token}&key=${API_KEY}`;
-
-    console.log("URL loadMoreRestaurants:", url);
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.results && data.results.length > 0) {
-      const filteredRestaurants = data.results.map((place: any) => ({
-        id: place.place_id,
-        name: place.name,
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
-      }));
-
-      const uniqueRestaurants = filteredRestaurants.filter(
-        (FoodPoint: FoodPoint) =>
-          !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
-      );
-      setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
-      setNextPageToken(data.next_page_token || null);
-
-      if (data.next_page_token) {
-        console.log("Llamado a funcion.");
-        setTimeout(() => {
-          loadMoreRestaurants(data.next_page_token);
-        }, 2000);
-      }
-    } else {
-      console.log("No hay restaurantes cercanos.");
+      console.log("No se encontraron restaurantes en la base de datos");
     }
   };
 
@@ -159,7 +115,7 @@ export default function HomeScreen() {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       });
-      await fetchRestaurants(userLatitude, userLongitude);
+      await fetchRestaurants();
       setLoading(false);
     })();
   }, []);
@@ -208,7 +164,6 @@ export default function HomeScreen() {
   });
 
   const handleRestaurantSearchSelect = (restaurant: FoodPoint) => {
-    fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
     if (mapRef.current) {
@@ -218,27 +173,6 @@ export default function HomeScreen() {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       });
-    }
-  };
-
-  const fetchRestaurantDetails = async (placeId: string) => {
-    const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE`);
-    const data = await response.json();
-    if (data.result) {
-      const restaurantDetails = {
-        id: data.result.place_id,
-        name: data.result.name,
-        address: data.result.formatted_address || "Dirección no disponible",
-        phone: data.result.formatted_phone_number || "Teléfono no disponible",
-        description: data.result.types ? data.result.types.join(", ") : "Descripción no disponible",
-        image: data.result.photos && data.result.photos.length > 0 ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${data.result.photos[0].photo_reference}&key=AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE` : "https://via.placeholder.com/150",
-        latitude: data.result.geometry.location.lat,
-        longitude: data.result.geometry.location.lng,
-      };
-      console.log("Restaurant details fetched:", restaurantDetails);
-      setSelectedRestaurant(restaurantDetails);
-    } else {
-      console.log("Detalles del restaurante no disponibles");
     }
   };
 
@@ -262,7 +196,6 @@ export default function HomeScreen() {
   };
 
   const handleRestaurantFavoriteSelect = (restaurant: FoodPoint) => {
-    fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setFavoritesVisible(false);
   };
@@ -340,22 +273,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
-    borderRadius: 8,
-    padding: 8,
-    backgroundColor: "#f9f9f9",
-    elevation: 1,
   },
-  restaurantImage: {
-    width: 50,
-    height: 50,
-    marginRight: 8,
+  restaurantName: {
+    fontSize: 18,
+    fontWeight: "bold",
   },
-  distanceFilterContainer: {
+  buttonContainer: {
     position: "absolute",
-    top: 100,
-    left: 250,
+    top: 20,
     right: 20,
-    zIndex: 10,
-    paddingHorizontal: 10,
   },
 });
+
