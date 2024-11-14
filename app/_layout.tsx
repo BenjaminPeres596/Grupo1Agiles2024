@@ -14,14 +14,14 @@ const Stack = createStackNavigator();
 const App = () => {
   return (
     <AuthProvider>
-      <DataProvider>
+      {/* <DataProvider> */}
         <GestureHandlerRootView style={{ flex: 1 }}>
             <Stack.Navigator initialRouteName="Home">
               <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
               <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
         </GestureHandlerRootView>
-      </DataProvider>
+      {/* </DataProvider> */}
     </AuthProvider>
   );
 };
