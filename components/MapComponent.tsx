@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { ThemedText } from '@/components/ThemedText';
+import { Platform } from 'react-native';
 
 type LocationType = {
     latitude: number;
@@ -74,19 +75,25 @@ const MapComponent: React.FC<MapComponentProps> = ({
                     style={{ flex: 1 }}
                     region={location}
                     showsUserLocation={true}
-                    onPress={handleMapPress}
+                    onPress={(event) => {
+                        if (event.nativeEvent.action !== 'marker-press') {
+                            // Solo ejecuta esta lógica si el evento NO es un "marker-press"
+                            handleMapPress();
+                        }
+                    }}
                 >
-                    {filteredRestaurants.map((restaurant, index) => {
+                    {filteredRestaurants.map((restaurant) => {
                         const isActive = selectedRestaurant?.id === restaurant.id;
                         return (
                             <Marker
-                                key={`restaurant-${restaurant.id}-${index}-${isActive ? 'active' : 'inactive'}`}
+                                key={restaurant.id} // Simplifica la clave
                                 pinColor={isActive ? 'blue' : 'red'}
                                 coordinate={{
                                     latitude: restaurant.latitude,
                                     longitude: restaurant.longitude,
                                 }}
                                 onPress={() => handleMarkerPress(restaurant)}
+                                tracksViewChanges={Platform.OS === 'ios' ? false : true} // Ajusta el comportamiento en iOS
                             />
                         );
                     })}
