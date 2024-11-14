@@ -74,7 +74,27 @@
                 handleMarkerPress(restaurant); // Simula un clic en el marcador
             }
         };
-
+      
+        const moveToNextRestaurant = () => {
+          if (selectedRestaurant && filteredRestaurants.length > 1) {
+              const distances = filteredRestaurants.map((restaurant) => {
+                  const distance = Math.sqrt(
+                      Math.pow(selectedRestaurant.latitude - restaurant.latitude, 2) +
+                      Math.pow(selectedRestaurant.longitude - restaurant.longitude, 2)
+                  );
+                  return { restaurant, distance };
+              });
+      
+              const nearest = distances
+                  .filter(({ restaurant }) => restaurant.id !== selectedRestaurant.id)
+                  .sort((a, b) => a.distance - b.distance)[0]?.restaurant;
+      
+              if (nearest) {
+                  moveToLocation(nearest);
+                  setSelectedRestaurant(nearest); // Actualiza el restaurante seleccionado
+              }
+          }
+      };
 
       const handleMarkerPress = (restaurant: FoodPoint) => {
         setSelectedRestaurant(restaurant);
@@ -322,6 +342,7 @@
               image={selectedRestaurant.image || "https://via.placeholder.com/150"}
               onClose={closeModal}
               onFavoriteUpdate={handleFavoriteUpdate}
+              moveToNextRestaurant={moveToNextRestaurant}
             />
           )}
         </View>
