@@ -8,11 +8,12 @@ import {
   Modal,
   Text,
   ScrollView,
+  Button,
 } from "react-native";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import MapView, { Marker, MapViewProps } from "react-native-maps";
+import MapView, { Marker, MapViewProps, Callout } from "react-native-maps";
 import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
 import Header from "@/components/Header";
@@ -51,8 +52,9 @@ export default function HomeScreen() {
   const [nearbyRestaurants, setNearbyRestaurants] = useState<FoodPoint[]>([]);
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isDistanceFilterVisible, setIsDistanceFilterVisible] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
-
+    const [modalVisible, setModalVisible] = useState(false);
+    const [promotedRestaurant, setPromotedRestaurant] = useState<FoodPoint | null>(null);
+    const [isPromotedModalVisible, setIsPromotedModalVisible] = useState(true);
   //para mostrar el listado de favoritos
   const [favoritesVisible, setFavoritesVisible] = useState(false);
 
@@ -114,7 +116,11 @@ export default function HomeScreen() {
         );
 
         setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
-        setNextPageToken(data.next_page_token || null);
+          setNextPageToken(data.next_page_token || null);
+          // Selecciona un restaurante aleatorio como promocionado
+          const randomRestaurant = uniqueRestaurants[Math.floor(Math.random() * uniqueRestaurants.length)];
+          setPromotedRestaurant(randomRestaurant);
+
 
         // Llamamos a loadMoreRestaurants automáticamente si hay un nextPageToken
         // Espera 2 segundos antes de hacer la segunda llamada
@@ -131,8 +137,26 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error("Error al intentar el fetch:", error);
-    }
-  };
+      }
+
+    };
+
+    const closePromotedModal = () => {
+        setIsPromotedModalVisible(false);
+
+        if (promotedRestaurant && mapRef.current) {
+            // Centrar el mapa en el restaurante promocionado
+            mapRef.current.animateToRegion({
+                latitude: promotedRestaurant.latitude,
+                longitude: promotedRestaurant.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+            });
+
+            // Simular un clic en el marcador para activar `handleMarkerPress`
+            handleMarkerPress(promotedRestaurant);
+        }
+    };
 
   const loadMoreRestaurants = async (token: string) => {
     const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE";
@@ -365,7 +389,20 @@ export default function HomeScreen() {
         title="DondeComo"
         onProfilePress={() => setFavoritesVisible(true)}
         onSearchPress={() => setModalVisible(true)}
-      />
+          />
+          {promotedRestaurant && (
+              <Modal visible={isPromotedModalVisible} animationType="fade" transparent={true}>
+                  <View style={styles.promotedModalOverlay}>
+                      <View style={styles.centeredCard}>
+                          <Text style={styles.title}>{promotedRestaurant.name}</Text>
+                          <Text style={styles.address}>Restaurante destacado cerca</Text>
+                          <Pressable style={styles.closeButton} onPress={closePromotedModal}>
+                              <Text style={styles.closeButtonText}>Ver en el mapa</Text>
+                          </Pressable>
+                      </View>
+                  </View>
+              </Modal>
+          )}
 
       {/* Renderiza el filtro de distancia solo si no hay un restaurante seleccionado */}
       {isDistanceFilterVisible && (
@@ -392,8 +429,6 @@ export default function HomeScreen() {
                     latitude: restaurant.latitude,
                     longitude: restaurant.longitude,
                   }}
-                  title={restaurant.name}
-                  description="Restaurante sin gluten"
                   onPress={() => handleMarkerPress(restaurant)}
                 />
               );
@@ -479,5 +514,48 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 10,
     paddingHorizontal: 10,
-  },
+    },
+    promotedModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)', // Fondo oscuro semitransparente para resaltar el modal
+        justifyContent: 'center', // Centra verticalmente
+        alignItems: 'center',     // Centra horizontalmente
+    },
+    centeredCard: {
+        width: '80%',
+        padding: 16,
+        backgroundColor: '#EF4423',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5,
+        alignItems: 'center', // Centra el contenido dentro del card
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    address: {
+        fontSize: 16,
+        color: 'rgba(255, 255, 255, 0.9)',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    closeButton: {
+        backgroundColor: 'white',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        color: '#EF4423',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });
