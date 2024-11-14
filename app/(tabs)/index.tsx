@@ -281,6 +281,16 @@ export default function HomeScreen() {
         selectedRestaurant={selectedRestaurant}
         handleMarkerPress={handleMarkerPress}
         handleMapPress={handleMapPress}
+        moveToLocation={(loc) => {
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+              latitude: loc?.latitude || 0,
+              longitude: loc?.longitude || 0,
+              latitudeDelta: loc?.latitudeDelta || 0.01,
+              longitudeDelta: loc?.longitudeDelta || 0.01,
+            });
+          }
+        }}
       />
 
       <SearchModal
