@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 
 type Plato = {
     id: string;
@@ -63,7 +63,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }
     }, [restaurantId]);
 
     return (
-        <View style={styles.menuContainer}>
+        <SafeAreaView style={styles.menuContainer}>
             <Text style={styles.menuTitle}>Menú de {restaurantName}</Text>
             <FlatList
                 data={platos}
@@ -83,7 +83,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }
             <TouchableOpacity style={styles.buttonClose} onPress={onClose}>
                 <Text style={styles.buttonText}>Cerrar</Text>
             </TouchableOpacity>
-        </View>
+        </SafeAreaView>
     );
 };
 
