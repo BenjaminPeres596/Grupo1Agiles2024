@@ -4,13 +4,13 @@ import {
     Text,
     Image,
     StyleSheet,
-    Button,
-    Modal,
     TouchableOpacity,
+    Modal,
 } from 'react-native';
 import RatingModal from './RatingModal';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RestaurantMenu from './RestaurantMenu';
 
 type RestaurantInfoCardProps = {
     restaurantId: string;
@@ -33,7 +33,8 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     onClose,
     onFavoriteUpdate,
 }) => {
-    const [modalVisible, setModalVisible] = React.useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [menuVisible, setMenuVisible] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
 
     useEffect(() => {
@@ -42,7 +43,7 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                 const favoriteIds = await AsyncStorage.getItem('favoriteRestaurants');
                 if (favoriteIds) {
                     const favorites = JSON.parse(favoriteIds);
-                    setIsFavorite(favorites.includes(restaurantId)); // Verifica si el ID está en la lista
+                    setIsFavorite(favorites.includes(restaurantId));
                 }
             } catch (error) {
                 console.error("Error fetching favorite status:", error);
@@ -58,22 +59,19 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
             const newFavoriteStatus = !isFavorite;
     
             if (newFavoriteStatus) {
-                // Agregar a la lista de favoritos
                 if (!favorites.includes(restaurantId)) {
                     favorites.push(restaurantId);
                 }
             } else {
-                // Eliminar de la lista de favoritos
                 const index = favorites.indexOf(restaurantId);
                 if (index > -1) {
                     favorites.splice(index, 1);
                 }
             }
     
-            // Guardar la lista actualizada en AsyncStorage
             await AsyncStorage.setItem('favoriteRestaurants', JSON.stringify(favorites));
-            setIsFavorite(newFavoriteStatus); // Actualiza el estado local
-            onFavoriteUpdate(favorites); // Llama al método para pasar la lista actualizada al componente padre
+            setIsFavorite(newFavoriteStatus);
+            onFavoriteUpdate(favorites);
         } catch (error) {
             console.error("Error saving favorite status:", error);
         }
@@ -91,11 +89,18 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                 <Text style={styles.title}>{name}</Text>
                 <Text style={styles.address}>{address}</Text>
                 <Text style={styles.phone}>{phone}</Text>
+
                 <TouchableOpacity
                     style={styles.buttonQualify}
                     onPress={() => setModalVisible(true)}
                 >
                     <Text style={styles.buttonText}>Calificar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.buttonMenu}
+                    onPress={() => setMenuVisible(true)}
+                >
+                    <Text style={styles.buttonText}>Ver Menú</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.buttonClose}
@@ -104,12 +109,21 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                     <Text style={styles.buttonText}>Cerrar</Text>
                 </TouchableOpacity>
             </View>
+            
             <Modal
                 visible={modalVisible}
                 animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
                 <RatingModal restaurantId={restaurantId} onClose={() => setModalVisible(false)} />
+            </Modal>
+
+            <Modal
+                visible={menuVisible}
+                animationType="slide"
+                onRequestClose={() => setMenuVisible(false)}
+            >
+                <RestaurantMenu restaurantId={restaurantId} onClose={() => setMenuVisible(false)} />
             </Modal>
         </View>
     );
@@ -123,18 +137,18 @@ const styles = StyleSheet.create({
         bottom: 15,
         left: 15,
         right: 15,
-        padding: 8, // Reducido el padding
-        backgroundColor: '#EF4423', // Fondo del card
+        padding: 8,
+        backgroundColor: '#EF4423',
         borderRadius: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 }, // Altura de la sombra reducida
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
-        elevation: 4, // Elevación reducida
+        elevation: 4,
     },
     image: {
         width: '100%',
-        height: 120, // Reducido el tamaño de la imagen
+        height: 120,
         borderRadius: 8,
         marginBottom: -8,
     },
@@ -142,48 +156,55 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 10,
         right: 10,
-        backgroundColor: 'rgba(255, 255, 255, 0.5)', // Fondo opcional para el botón
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
         borderRadius: 25,
         padding: 5,
-        elevation: 5, // Para dar sombra
+        elevation: 5,
     },
     infoContainer: {
-        padding: 8, // Reducido el padding
+        padding: 8,
     },
     title: {
-        fontSize: 23, // Reducido el tamaño de la fuente
+        fontSize: 23,
         fontWeight: 'bold',
         textTransform: 'uppercase',
         color: '#FFFFFF',
-        marginBottom: -1, // Reducido el margen
+        marginBottom: -1,
     },
     address: {
-        fontSize: 14, // Reducido el tamaño de la fuente
+        fontSize: 14,
         fontWeight: 'bold',
         color: 'rgba(255, 255, 255, 0.8)',
         marginBottom: 1,
     },
     phone: {
-        fontSize: 12, // Reducido el tamaño de la fuente
+        fontSize: 12,
         color: 'rgba(255, 255, 255, 0.8)',
         marginBottom: 8,
     },
     buttonQualify: {
         backgroundColor: '#FF4D4D',
-        padding: 6, // Reducido el padding
+        padding: 6,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginBottom: 7,
+    },
+    buttonMenu: {
+        backgroundColor: '#28A745',
+        padding: 6,
         borderRadius: 5,
         alignItems: 'center',
         marginBottom: 7,
     },
     buttonClose: {
         backgroundColor: '#0D73AB',
-        padding: 6, // Reducido el padding
+        padding: 6,
         borderRadius: 5,
         alignItems: 'center',
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 14, // Reducido el tamaño de la fuente
+        fontSize: 14,
         fontWeight: 'bold',
     },
 });

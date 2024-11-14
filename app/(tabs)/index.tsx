@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import Header from "@/components/Header";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard";
@@ -219,6 +220,16 @@ export default function HomeScreen() {
         selectedRestaurant={selectedRestaurant}
         handleMarkerPress={handleMarkerPress} 
         handleMapPress={handleMapPress}
+        moveToLocation={(loc) => {
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+              latitude: loc?.latitude || 0,
+              longitude: loc?.longitude || 0,
+              latitudeDelta: loc?.latitudeDelta || 0.01,
+              longitudeDelta: loc?.longitudeDelta || 0.01,
+            });
+          }
+        }}
       />
 
       <SearchModal
