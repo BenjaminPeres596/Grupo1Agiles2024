@@ -12,6 +12,7 @@ import DistanceFilter from "@/components/distancefilter";
 import MapComponent from "@/components/MapComponent";
 import SearchModal from "@/components/SearchModal";
 import FavoritesModal from "@/components/FavoritesModal";
+import { useData } from "@/context/DataContext";
 
 type LocationType = {
   latitude: number;
@@ -46,6 +47,7 @@ export default function HomeScreen() {
   const [maxDistance, setmaxDistance] = useState(15000);
   const [searchText, setSearchText] = useState("");
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const mapRef = useRef<MapView>(null);
 
   const handleDistanceChange = (distance: number) => {
     setmaxDistance(distance);
@@ -58,6 +60,10 @@ export default function HomeScreen() {
     fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
+  };
+
+  const handleMapPress = () => {
+    setSelectedRestaurant(null); // Cerrar el modal del restaurante seleccionado
   };
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
@@ -205,6 +211,14 @@ export default function HomeScreen() {
     fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
   };
 
   const fetchRestaurantDetails = async (placeId: string) => {
@@ -270,7 +284,8 @@ export default function HomeScreen() {
         loading={loading}
         filteredRestaurants={filteredRestaurants}
         selectedRestaurant={selectedRestaurant}
-        handleMarkerPress={handleMarkerPress}
+        handleMarkerPress={handleMarkerPress} 
+        handleMapPress={handleMapPress}
       />
 
       <SearchModal

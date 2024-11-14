@@ -16,9 +16,9 @@ const App = () => {
     <AuthProvider>
       <DataProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <Stack.Navigator initialRouteName="Login">
-              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Navigator initialRouteName="Home">
               <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
         </GestureHandlerRootView>
       </DataProvider>

@@ -1,4 +1,5 @@
-import React from "react";
+// components/MapComponent.tsx
+import React, { useRef, useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { ThemedText } from "@/components/ThemedText";
@@ -23,6 +24,8 @@ interface MapComponentProps {
   filteredRestaurants: FoodPoint[];
   selectedRestaurant: FoodPoint | null;
   handleMarkerPress: (restaurant: FoodPoint) => void;
+  handleMapPress: () => void;
+  moveToLocation: (location: LocationType) => void; // Nueva prop para mover el mapa
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({
@@ -31,8 +34,22 @@ const MapComponent: React.FC<MapComponentProps> = ({
   filteredRestaurants,
   selectedRestaurant,
   handleMarkerPress,
+  handleMapPress,
+  moveToLocation,
 }) => {
-  const mapRef = React.useRef<MapView>(null);
+  const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    if (selectedRestaurant && mapRef.current) {
+      const { latitude, longitude } = selectedRestaurant;
+      mapRef.current.animateToRegion({
+        latitude,
+        longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [selectedRestaurant]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -44,6 +61,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
           style={{ flex: 1 }}
           region={location}
           showsUserLocation={true}
+          onPress={handleMapPress}
         >
           {filteredRestaurants.map((restaurant, index) => {
             const isActive = selectedRestaurant?.id === restaurant.id;
