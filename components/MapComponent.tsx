@@ -86,8 +86,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
                                     latitude: restaurant.latitude,
                                     longitude: restaurant.longitude,
                                 }}
-                                title={restaurant.name}
-                                description="Restaurante sin gluten"
                                 onPress={() => handleMarkerPress(restaurant)}
                             />
                         );
