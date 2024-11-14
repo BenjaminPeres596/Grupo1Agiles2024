@@ -3,6 +3,7 @@ import { View, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { ThemedText } from '@/components/ThemedText';
 import { Platform } from 'react-native';
+import LoadingScreen from './LoadingScreen';
 
 type LocationType = {
     latitude: number;
@@ -68,7 +69,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     return (
         <View style={{ flex: 1 }}>
             {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
+                <LoadingScreen/>
             ) : location ? (
                 <MapView
                     ref={mapRef}
