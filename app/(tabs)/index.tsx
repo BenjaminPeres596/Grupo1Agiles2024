@@ -61,7 +61,21 @@
       const [maxDistance, setmaxDistance] = useState(15000);
       const [searchText, setSearchText] = useState("");
       const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-      const mapRef = useRef<MapView>(null);
+        const mapRef = useRef<MapView>(null);
+
+
+        const moveToLocation = (restaurant: FoodPoint) => {
+            if (mapRef.current) {
+                mapRef.current.animateToRegion({
+                    latitude: restaurant.latitude,
+                    longitude: restaurant.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                });
+                handleMarkerPress(restaurant); // Simula un clic en el marcador
+            }
+        };
+
 
       const handleDistanceChange = (distance: number) => {
         setmaxDistance(distance);
@@ -129,22 +143,15 @@
             }
         };
 
-      const closePromotedModal = () => {
-        setIsPromotedModalVisible(false);
+        const closePromotedModal = () => {
+            setIsPromotedModalVisible(false);
 
-        if (promotedRestaurant && mapRef.current) {
-          // Centrar el mapa en el restaurante promocionado
-          mapRef.current.animateToRegion({
-            latitude: promotedRestaurant.latitude,
-            longitude: promotedRestaurant.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          });
-
-          // Simular un clic en el marcador para activar `handleMarkerPress`
-          handleMarkerPress(promotedRestaurant);
+            if (promotedRestaurant) {
+                // Mover el mapa al restaurante promocionado y seleccionar el restaurante
+                moveToLocation(promotedRestaurant);
+                setSelectedRestaurant(promotedRestaurant); // Activa la tarjeta del restaurante
+            }
         }
-      };
 
       useEffect(() => {
         (async () => {
@@ -287,24 +294,15 @@
             <DistanceFilter onDistanceChange={handleDistanceChange} />
           )}
 
-          <MapComponent
-            location={location}
-            loading={loading}
-            filteredRestaurants={filteredRestaurants}
-            selectedRestaurant={selectedRestaurant}
-            handleMarkerPress={handleMarkerPress}
-            handleMapPress={handleMapPress}
-            moveToLocation={(loc) => {
-              if (mapRef.current) {
-                mapRef.current.animateToRegion({
-                  latitude: loc?.latitude || 0,
-                  longitude: loc?.longitude || 0,
-                  latitudeDelta: loc?.latitudeDelta || 0.01,
-                  longitudeDelta: loc?.longitudeDelta || 0.01,
-                });
-              }
-            }}
-          />
+              <MapComponent
+                  location={location}
+                  loading={loading}
+                  filteredRestaurants={filteredRestaurants}
+                  selectedRestaurant={selectedRestaurant}
+                  handleMarkerPress={handleMarkerPress}
+                  handleMapPress={handleMapPress}
+                  moveToLocation={moveToLocation} // Pasa la función aquí
+              />
 
           <SearchModal
             modalVisible={modalVisible}
