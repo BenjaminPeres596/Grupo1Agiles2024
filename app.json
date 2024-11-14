@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
+    "newArchEnabled": false,
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -16,6 +17,9 @@
       "supportsTablet": true,
       "config": {
         "googleMapsApiKey": "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby restaurants."
       }
     },
     "android": {

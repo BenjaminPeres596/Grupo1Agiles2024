@@ -23,7 +23,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
             const data = await AsyncStorage.getItem(`restaurant_${restaurantId}`);
             if (data) {
                 const parsedData = JSON.parse(data);
-                setRating(parsedData.rating);
+                setRating(Math.round(parsedData.rating));
                 setIsVegan(parsedData.isVegan);
                 setIsVegetarian(parsedData.isVegetarian);
                 setIsGlutenFree(parsedData.isGlutenFree);

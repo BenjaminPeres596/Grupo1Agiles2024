@@ -1,30 +1,19 @@
+import React, { useState, useEffect, useRef } from "react";
 import {
-  Image,
-  StyleSheet,
   View,
   ActivityIndicator,
-  FlatList,
-  Pressable,
-  Modal,
-  Text,
-  ScrollView,
+  StyleSheet,
 } from "react-native";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import MapView, { Marker, MapViewProps } from "react-native-maps";
-import { useState, useEffect, useRef } from "react";
 import * as Location from "expo-location";
 import Header from "@/components/Header";
-import Busqueda from "@/components/Busqueda";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Slider from "@react-native-community/slider";
-import distancefilter from "@/components/distancefilter";
 import DistanceFilter from "@/components/distancefilter";
-import Favoritos from "@/components/Favorites";
+import MapComponent from "@/components/MapComponent";
+import SearchModal from "@/components/SearchModal";
+import FavoritesModal from "@/components/FavoritesModal";
+import { useData } from "@/context/DataContext";
 
-// Definir el tipo para representar la ubicación del usuario
 type LocationType = {
   latitude: number;
   longitude: number;
@@ -41,7 +30,7 @@ type FoodPoint = {
   phone?: string;
   description?: string;
   image?: string;
-  reviews?: any[]; 
+  reviews?: any[];
   isFavorite?: boolean;
 };
 
@@ -52,43 +41,29 @@ export default function HomeScreen() {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [isDistanceFilterVisible, setIsDistanceFilterVisible] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-
-  //para mostrar el listado de favoritos
   const [favoritesVisible, setFavoritesVisible] = useState(false);
-
-  // Estado para el restaurante que se selecciona
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<FoodPoint | null>(null);
-  const [reviews, setReviews] = useState<{ [key: number]: any }>({}); // Estado para las reseñas
-
+  const [selectedRestaurant, setSelectedRestaurant] = useState<FoodPoint | null>(null);
+  const [reviews, setReviews] = useState<{ [key: number]: any }>({});
   const [maxDistance, setmaxDistance] = useState(15000);
-  // Función para actualizar la distancia máxima
+  const [searchText, setSearchText] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const mapRef = useRef<MapView>(null);
+
   const handleDistanceChange = (distance: number) => {
     setmaxDistance(distance);
-    // Aquí puedes volver a buscar restaurantes si es necesario
     if (location) {
       fetchRestaurants(location.latitude, location.longitude);
     }
   };
 
-  // Referencia a Parallax y ScrollView para el desplazamiento hacia arriba
-  const parallaxScrollViewRef = useRef<any>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const [searchText, setSearchText] = useState("");
-  const mapRef = useRef<MapView>(null);
-
   const handleMarkerPress = (restaurant: FoodPoint) => {
-    fetchRestaurantDetails(restaurant.id.toString()); // Obtiene los detalles del restaurante
+    fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
-    if (mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: restaurant.latitude - 0.0025,
-        longitude: restaurant.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
+  };
+
+  const handleMapPress = () => {
+    setSelectedRestaurant(null); // Cerrar el modal del restaurante seleccionado
   };
 
   const fetchRestaurants = async (latitude: number, longitude: number) => {
@@ -96,41 +71,35 @@ export default function HomeScreen() {
     const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${maxDistance}&type=restaurant&key=${API_KEY}`;
     console.log("URL:", url);
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
+    const response = await fetch(url);
+    const data = await response.json();
 
-      if (data.results && data.results.length > 0) {
-        const filteredRestaurants = data.results.map((place: any) => ({
-          id: place.place_id,
-          name: place.name,
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-        }));
+    if (data.results && data.results.length > 0) {
+      const filteredRestaurants = data.results.map((place: any) => ({
+        id: place.place_id,
+        name: place.name,
+        latitude: place.geometry.location.lat,
+        longitude: place.geometry.location.lng,
+      }));
 
-        const uniqueRestaurants = filteredRestaurants.filter(
-          (FoodPoint: FoodPoint) =>
-            !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
-        );
+      const uniqueRestaurants = filteredRestaurants.filter(
+        (FoodPoint: FoodPoint) =>
+          !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
+      );
 
-        setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
-        setNextPageToken(data.next_page_token || null);
+      setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
+      setNextPageToken(data.next_page_token || null);
 
-        // Llamamos a loadMoreRestaurants automáticamente si hay un nextPageToken
-        // Espera 2 segundos antes de hacer la segunda llamada
-        if (data.next_page_token) {
-          console.log("Llamado a funcion.");
-          setTimeout(() => {
-            loadMoreRestaurants(data.next_page_token);
-          }, 2000); // Espera 2 segundos
-        } else {
-          console.log("No se encontraron más resultados.");
-        }
+      if (data.next_page_token) {
+        console.log("Llamado a funcion.");
+        setTimeout(() => {
+          loadMoreRestaurants(data.next_page_token);
+        }, 2000);
       } else {
-        console.log("No se encontraron resultados");
+        console.log("No se encontraron más resultados.");
       }
-    } catch (error) {
-      console.error("Error al intentar el fetch:", error);
+    } else {
+      console.log("No se encontraron resultados");
     }
   };
 
@@ -140,71 +109,58 @@ export default function HomeScreen() {
 
     console.log("URL loadMoreRestaurants:", url);
 
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
+    const response = await fetch(url);
+    const data = await response.json();
 
-      if (data.results && data.results.length > 0) {
-        const filteredRestaurants = data.results.map((place: any) => ({
-          id: place.place_id,
-          name: place.name,
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-        }));
+    if (data.results && data.results.length > 0) {
+      const filteredRestaurants = data.results.map((place: any) => ({
+        id: place.place_id,
+        name: place.name,
+        latitude: place.geometry.location.lat,
+        longitude: place.geometry.location.lng,
+      }));
 
-        const uniqueRestaurants = filteredRestaurants.filter(
-          (FoodPoint: FoodPoint) =>
-            !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
-        );
-        setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
-        setNextPageToken(data.next_page_token || null);
+      const uniqueRestaurants = filteredRestaurants.filter(
+        (FoodPoint: FoodPoint) =>
+          !nearbyRestaurants.some((r) => r.id === FoodPoint.id)
+      );
+      setNearbyRestaurants((prev) => [...prev, ...uniqueRestaurants]);
+      setNextPageToken(data.next_page_token || null);
 
-        // Continuamos llamando a loadMoreRestaurants si hay un nextPageToken adicional
-        // Espera 2 segundos antes de hacer la segunda llamada
-        if (data.next_page_token) {
-          console.log("Llamado a funcion.");
-          setTimeout(() => {
-            loadMoreRestaurants(data.next_page_token);
-          }, 2000); // Espera 2 segundos
-        }
-      } else {
-        console.log("No hay restaurantes cercanos.");
+      if (data.next_page_token) {
+        console.log("Llamado a funcion.");
+        setTimeout(() => {
+          loadMoreRestaurants(data.next_page_token);
+        }, 2000);
       }
-    } catch (error) {
-      console.error("Error al hacer fetch:", error);
+    } else {
+      console.log("No hay restaurantes cercanos.");
     }
   };
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync(); // Solicitamos permiso de ubicación al celular
+      let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         console.log("Permiso de ubicación denegado.");
         setLoading(false);
         return;
       }
 
-      try {
-        let currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
-        });
-        const userLatitude = currentLocation.coords.latitude;
-        const userLongitude = currentLocation.coords.longitude;
+      let currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+      });
+      const userLatitude = currentLocation.coords.latitude;
+      const userLongitude = currentLocation.coords.longitude;
 
-        // Establecer la ubicación del usuario
-        setLocation({
-          latitude: userLatitude,
-          longitude: userLongitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
-        // Obtener restaurantes cercanos
-        await fetchRestaurants(userLatitude, userLongitude);
-      } catch (error) {
-        console.error("Error obteniendo la ubicación:", error);
-      } finally {
-        setLoading(false);
-      }
+      setLocation({
+        latitude: userLatitude,
+        longitude: userLongitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+      await fetchRestaurants(userLatitude, userLongitude);
+      setLoading(false);
     })();
   }, []);
 
@@ -214,55 +170,50 @@ export default function HomeScreen() {
 
   const closeModal = () => {
     setModalVisible(false);
-    setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
+    setSelectedRestaurant(null);
   };
 
-  // Función para calcular la distancia entre dos puntos geograficos
   const calculateDistance = (
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number
   ) => {
-    const R = 6371e3; // Radio de la Tierra en metros
+    const R = 6371e3;
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const Δλ = ((lon1 - lon2) * Math.PI) / 180;
 
     const a =
       Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c; // Retorna la distancia en metros
+    return R * c;
   };
 
-  // Filtrar restaurantes en base al texto de búsqueda
   const filteredRestaurants = nearbyRestaurants.filter((restaurant) => {
-    // Usa el encadenamiento opcional para evitar errores si location es null
     const distance = calculateDistance(
-      location?.latitude || 0, // Proporciona un valor por defecto si location es null
-      location?.longitude || 0, // Proporciona un valor por defecto si location es null
+      location?.latitude || 0,
+      location?.longitude || 0,
       restaurant.latitude,
       restaurant.longitude
     );
 
     return (
       restaurant.name.toLowerCase().startsWith(searchText.toLowerCase()) &&
-      distance <= maxDistance // Verifica si la distancia está dentro del límite
+      distance <= maxDistance
     );
   });
 
-  // Manejar la selección del restaurante desde el componente Busqueda
-  // Modifica handleRestaurantSelect para obtener detalles específicos del restaurante seleccionado
   const handleRestaurantSearchSelect = (restaurant: FoodPoint) => {
-    fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
+    fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setModalVisible(false);
     if (mapRef.current) {
       mapRef.current.animateToRegion({
-        latitude: restaurant.latitude - 0.0025,
+        latitude: restaurant.latitude,
         longitude: restaurant.longitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
@@ -271,92 +222,49 @@ export default function HomeScreen() {
   };
 
   const fetchRestaurantDetails = async (placeId: string) => {
-    const API_KEY = "AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE"; 
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`;
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.result) {
-        const restaurantDetails = {
-          id: data.result.place_id,
-          name: data.result.name,
-          address: data.result.formatted_address || "Dirección no disponible",
-          phone: data.result.formatted_phone_number || "Teléfono no disponible",
-          description: data.result.types
-            ? data.result.types.join(", ")
-            : "Descripción no disponible",
-          image:
-            data.result.photos && data.result.photos.length > 0
-              ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${data.result.photos[0].photo_reference}&key=${API_KEY}`
-              : "https://via.placeholder.com/150",
-          latitude: data.result.geometry.location.lat,
-          longitude: data.result.geometry.location.lng,
-        };
-        console.log(restaurantDetails);
-        setSelectedRestaurant({
-          id: restaurantDetails.id,
-          name: restaurantDetails.name,
-          address: restaurantDetails.address,
-          phone: restaurantDetails.phone,
-          description: restaurantDetails.description,
-          image: restaurantDetails.image,
-          latitude:
-            restaurantDetails.latitude !== null
-              ? restaurantDetails.latitude
-              : 0,
-          longitude:
-            restaurantDetails.longitude !== null
-              ? restaurantDetails.longitude
-              : 0,
-        });
-      } else {
-        console.log("Detalles del restaurante no disponibles");
-      }
-    } catch (error) {
-      console.error("Error obteniendo detalles del restaurante:", error);
+    const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE`);
+    const data = await response.json();
+    if (data.result) {
+      const restaurantDetails = {
+        id: data.result.place_id,
+        name: data.result.name,
+        address: data.result.formatted_address || "Dirección no disponible",
+        phone: data.result.formatted_phone_number || "Teléfono no disponible",
+        description: data.result.types ? data.result.types.join(", ") : "Descripción no disponible",
+        image: data.result.photos && data.result.photos.length > 0 ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${data.result.photos[0].photo_reference}&key=AIzaSyBhAMa66FuySpxmP4lydmRENtNDWqp4WnE` : "https://via.placeholder.com/150",
+        latitude: data.result.geometry.location.lat,
+        longitude: data.result.geometry.location.lng,
+      };
+      console.log("Restaurant details fetched:", restaurantDetails);
+      setSelectedRestaurant(restaurantDetails);
+    } else {
+      console.log("Detalles del restaurante no disponibles");
     }
   };
 
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-
   useEffect(() => {
     const loadFavorites = async () => {
-        try {
-            const favoriteIdsString = await AsyncStorage.getItem('favoriteRestaurants');
-            if (favoriteIdsString) {
-                setFavoriteIds(JSON.parse(favoriteIdsString));
-            }
-        } catch (error) {
-            console.error("Error loading favorite IDs:", error);
-        }
+      const favoriteIdsString = await AsyncStorage.getItem('favoriteRestaurants');
+      if (favoriteIdsString) {
+        setFavoriteIds(JSON.parse(favoriteIdsString));
+      }
     };
     loadFavorites();
-}, []);
+  }, []);
 
-  // Función para actualizar la lista de favoritos
   const handleFavoriteUpdate = (updatedFavorites: string[]) => {
     setFavoriteIds(updatedFavorites);
   };
 
   const closeFavorites = () => {
     setFavoritesVisible(false);
-    setSelectedRestaurant(null); // Reinicia el restaurante seleccionado al cerrar
+    setSelectedRestaurant(null);
   };
 
   const handleRestaurantFavoriteSelect = (restaurant: FoodPoint) => {
-    fetchRestaurantDetails(restaurant.id.toString()); // Convierte el ID a string
+    fetchRestaurantDetails(restaurant.id.toString());
     setSelectedRestaurant(restaurant);
     setFavoritesVisible(false);
-    if (mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: restaurant.latitude - 0.0025,
-        longitude: restaurant.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
   };
 
   return (
@@ -367,63 +275,35 @@ export default function HomeScreen() {
         onSearchPress={() => setModalVisible(true)}
       />
 
-      {/* Renderiza el filtro de distancia solo si no hay un restaurante seleccionado */}
       {isDistanceFilterVisible && (
         <DistanceFilter onDistanceChange={handleDistanceChange} />
       )}
 
-      <View style={styles.mapContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : location ? (
-          <MapView
-            ref={mapRef}
-            style={styles.map}
-            region={location}
-            showsUserLocation={true}
-          >
-            {filteredRestaurants.map((restaurant, index) => {
-              const isActive = selectedRestaurant?.id === restaurant.id;
-              return (
-                <Marker
-                  key={`restaurant-${restaurant.id}-${index}-${isActive ? "active" : "inactive"}`}
-                  pinColor={isActive ? "blue" : "red"}
-                  coordinate={{
-                    latitude: restaurant.latitude,
-                    longitude: restaurant.longitude,
-                  }}
-                  title={restaurant.name}
-                  description="Restaurante sin gluten"
-                  onPress={() => handleMarkerPress(restaurant)}
-                />
-              );
-            })}
-          </MapView>
-        ) : (
-          <ThemedText>No se pudo obtener la ubicación</ThemedText>
-        )}
-      </View>
+      <MapComponent
+        location={location}
+        loading={loading}
+        filteredRestaurants={filteredRestaurants}
+        selectedRestaurant={selectedRestaurant}
+        handleMarkerPress={handleMarkerPress} 
+        handleMapPress={handleMapPress}
+      />
 
-      <Modal visible={modalVisible} animationType="slide">
-        <Busqueda
-          searchText={searchText}
-          onSearchChange={setSearchText}
-          restaurants={[...filteredRestaurants]}
-          onClose={() => setModalVisible(false)}
-          onSelectRestaurant={(restaurant: FoodPoint) => {
-            handleRestaurantSearchSelect(restaurant);
-          }}
-        />
-      </Modal>
+      <SearchModal
+        modalVisible={modalVisible}
+        searchText={searchText}
+        setSearchText={setSearchText}
+        filteredRestaurants={filteredRestaurants}
+        handleRestaurantSearchSelect={handleRestaurantSearchSelect}
+        closeModal={closeModal}
+      />
 
-      <Modal visible={favoritesVisible} animationType="slide">
-        <Favoritos
-          restaurants={[...filteredRestaurants]}
-          favoriteIds={favoriteIds} 
-          onClose={() => setFavoritesVisible(false)}
-          onSelectRestaurant={handleRestaurantFavoriteSelect}
-        />
-      </Modal>
+      <FavoritesModal
+        favoritesVisible={favoritesVisible}
+        favoriteIds={favoriteIds}
+        filteredRestaurants={filteredRestaurants}
+        handleRestaurantFavoriteSelect={handleRestaurantFavoriteSelect}
+        closeFavorites={closeFavorites}
+      />
 
       {selectedRestaurant && (
         <RestaurantInfoCard
@@ -431,9 +311,7 @@ export default function HomeScreen() {
           name={selectedRestaurant.name}
           address={selectedRestaurant.address || "Dirección no disponible"}
           phone={selectedRestaurant.phone || "Teléfono no disponible"}
-          description={
-            selectedRestaurant.description || "Descripción no disponible"
-          }
+          description={selectedRestaurant.description || "Descripción no disponible"}
           image={selectedRestaurant.image || "https://via.placeholder.com/150"}
           onClose={closeModal}
           onFavoriteUpdate={handleFavoriteUpdate}
