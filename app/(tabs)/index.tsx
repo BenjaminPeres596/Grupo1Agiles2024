@@ -18,7 +18,6 @@
     import Header from "@/components/Header";
     import RestaurantInfoCard from "@/components/RestaurantInfoCard";
     import AsyncStorage from "@react-native-async-storage/async-storage";
-    import DistanceFilter from "@/components/distancefilter";
     import MapComponent from "@/components/MapComponent";
     import SearchModal from "@/components/SearchModal";
     import FavoritesModal from "@/components/FavoritesModal";
@@ -76,13 +75,6 @@
             }
         };
 
-
-      const handleDistanceChange = (distance: number) => {
-        setmaxDistance(distance);
-        if (location) {
-          fetchRestaurants();
-        }
-      };
 
       const handleMarkerPress = (restaurant: FoodPoint) => {
         setSelectedRestaurant(restaurant);
@@ -263,11 +255,13 @@
 
       return (
         <View style={{ flex: 1 }}>
-          <Header
-            title="DondeComo"
-            onProfilePress={() => setFavoritesVisible(true)}
-            onSearchPress={() => setModalVisible(true)}
-          />
+          {!loading && (
+                <Header
+                    title="DondeComo"
+                    onProfilePress={() => setFavoritesVisible(true)}
+                    onSearchPress={() => setModalVisible(true)}
+                />
+            )}
           {promotedRestaurant && (
             <Modal
               visible={isPromotedModalVisible}
@@ -287,11 +281,6 @@
                 </View>
               </View>
             </Modal>
-          )}
-
-          {/* Renderiza el filtro de distancia solo si no hay un restaurante seleccionado */}
-          {isDistanceFilterVisible && (
-            <DistanceFilter onDistanceChange={handleDistanceChange} />
           )}
 
               <MapComponent
