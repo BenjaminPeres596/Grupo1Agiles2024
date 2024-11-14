@@ -1,24 +1,27 @@
+// App.tsx
 import 'react-native-gesture-handler';
-import { Drawer } from 'expo-router/drawer';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { AuthProvider, useAuth } from '../context/AuthContext';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { AuthProvider } from '../context/AuthContext';
+import { DataProvider } from '../context/DataContext';
 import HomeScreen from './(tabs)';
 import LoginScreen from '../components/LoginScreen';
 
-const DrawerLayout = () => {
-  const { user } = useAuth();
-
-  return user ? <HomeScreen /> : <LoginScreen />;
-};
+const Stack = createStackNavigator();
 
 const App = () => {
   return (
     <AuthProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <DrawerLayout />
-      </GestureHandlerRootView>
+      <DataProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <Stack.Navigator initialRouteName="Login">
+              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+            </Stack.Navigator>
+        </GestureHandlerRootView>
+      </DataProvider>
     </AuthProvider>
   );
 };
