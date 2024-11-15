@@ -6,6 +6,7 @@ import {
     StyleSheet,
     TouchableOpacity,
     Modal,
+    FlatList,
 } from 'react-native';
 import RatingModal from './RatingModal';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -37,7 +38,14 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [menuVisible, setMenuVisible] = useState(false);
+    const [commentsVisible, setCommentsVisible] = useState(false); // Nuevo estado
     const [isFavorite, setIsFavorite] = useState(false);
+
+    const comments = [
+        { id: '1', text: 'Excelente servicio y comida deliciosa.' },
+        { id: '2', text: 'Ambiente agradable, pero algo ruidoso.' },
+        { id: '3', text: 'Recomendado al 100%, volveré pronto.' },
+    ]; // Ejemplo de comentarios
 
     useEffect(() => {
         const fetchFavoriteStatus = async () => {
@@ -113,6 +121,13 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                         <Icon name="book" size={16} color="#FFFFFF" style={styles.buttonIcon} />
                         <Text style={styles.buttonText}>Ver Menú</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.buttonComments}
+                        onPress={() => setCommentsVisible(true)}
+                    >
+                        <Icon name="comments" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.buttonText}>Ver Comentarios</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
@@ -122,7 +137,7 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                     <Icon name="arrow-right" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
-            
+
             <Modal
                 visible={modalVisible}
                 animationType="slide"
@@ -137,6 +152,29 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                 onRequestClose={() => setMenuVisible(false)}
             >
                 <RestaurantMenu restaurantId={restaurantId} onClose={() => setMenuVisible(false)} />
+            </Modal>
+
+            <Modal
+                visible={commentsVisible}
+                animationType="slide"
+                onRequestClose={() => setCommentsVisible(false)}
+            >
+                <View style={styles.modalContent}>
+                    <TouchableOpacity
+                        style={styles.closeModalButton}
+                        onPress={() => setCommentsVisible(false)}
+                    >
+                        <Icon name="close" size={20} color="#000" />
+                    </TouchableOpacity>
+                    <Text style={styles.modalTitle}>Comentarios</Text>
+                    <FlatList
+                        data={comments}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <Text style={styles.comment}>{item.text}</Text>
+                        )}
+                    />
+                </View>
             </Modal>
         </View>
     );
@@ -272,6 +310,40 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 4,
+    },
+    buttonComments: {
+        backgroundColor: '#007BFF',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 24,
+        flex: 1,
+        marginLeft: 6,
+        shadowColor: '#007BFF',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+    },
+    modalContent: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        padding: 16,
+    },
+    closeModalButton: {
+        alignSelf: 'flex-end',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    comment: {
+        fontSize: 16,
+        marginVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        paddingBottom: 8,
     },
 });
 
