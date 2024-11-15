@@ -65,8 +65,7 @@
       const [searchText, setSearchText] = useState("");
       const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
       const mapRef = useRef<MapView>(null);
-      const [restaurantOrder, setRestaurantOrder] = useState<FoodPoint[]>([]);
-      const [currentIndex, setCurrentIndex] = useState(0);
+      const [visitedRestaurants, setVisitedRestaurants] = useState<string[]>([]);
 
         const moveToLocation = (restaurant: FoodPoint) => {
             if (mapRef.current) {
@@ -82,37 +81,44 @@
       
         const moveToNextRestaurant = () => {
           if (selectedRestaurant && filteredRestaurants.length > 1) {
-              // Si es la primera vez, calcula el orden
-              if (restaurantOrder.length === 0) {
-                  const distances = filteredRestaurants.map((restaurant) => {
-                      const distance = Math.sqrt(
-                          Math.pow(selectedRestaurant.latitude - restaurant.latitude, 2) +
-                          Math.pow(selectedRestaurant.longitude - restaurant.longitude, 2)
-                      );
-                      return { restaurant, distance };
-                  });
+              // Combina el historial con el restaurante actualmente seleccionado
+              const updatedVisited = [...visitedRestaurants, selectedRestaurant.id];
       
-                  const sortedRestaurants = distances
-                      .filter(({ restaurant }) => restaurant.id !== selectedRestaurant.id)
-                      .sort((a, b) => a.distance - b.distance)
-                      .map(({ restaurant }) => restaurant);
+              // Filtra los restaurantes ya visitados
+              const unvisitedRestaurants = filteredRestaurants.filter(
+                  (restaurant) => !updatedVisited.includes(restaurant.id)
+              );
       
-                  setRestaurantOrder(sortedRestaurants);
-                  setCurrentIndex(0);
+              if (unvisitedRestaurants.length === 0) {
+                  // Si todos los restaurantes han sido visitados, reinicia el historial
+                  setVisitedRestaurants([]);
+                  return;
               }
       
-              // Avanza al siguiente restaurante en el orden
-              const nextIndex = (currentIndex + 1) % restaurantOrder.length;
-              const nextRestaurant = restaurantOrder[nextIndex];
+              // Calcula el restaurante más cercano entre los no visitados
+              const nearestRestaurant = unvisitedRestaurants
+                  .map((restaurant) => ({
+                      ...restaurant,
+                      distance: Math.sqrt(
+                          Math.pow(selectedRestaurant.latitude - restaurant.latitude, 2) +
+                          Math.pow(selectedRestaurant.longitude - restaurant.longitude, 2)
+                      ),
+                  }))
+                  .reduce((nearest, restaurant) =>
+                      restaurant.distance < nearest.distance ? restaurant : nearest
+                  );
       
-              if (nextRestaurant) {
-                  moveToLocation(nextRestaurant);
-                  setSelectedRestaurant(nextRestaurant);
-                  setCurrentIndex(nextIndex);
+              if (nearestRestaurant) {
+                  // Mueve a la ubicación del restaurante más cercano
+                  moveToLocation(nearestRestaurant);
+                  setSelectedRestaurant(nearestRestaurant);
+      
+                  // Actualiza el historial de restaurantes visitados
+                  setVisitedRestaurants(updatedVisited);
               }
           }
       };
-
+      
       const handleMarkerPress = (restaurant: FoodPoint) => {
         setSelectedRestaurant(restaurant);
         setModalVisible(false);
