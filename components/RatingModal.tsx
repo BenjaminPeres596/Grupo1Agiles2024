@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StarRating from 'react-native-star-rating-widget';
-import { CheckBox } from '@rneui/themed';
 
 type RatingModalProps = {
     restaurantId: string;
@@ -14,9 +13,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
     onClose = () => {},
 }) => {
     const [rating, setRating] = useState(0);
-    const [isVegan, setIsVegan] = useState(false);
-    const [isVegetarian, setIsVegetarian] = useState(false);
-    const [isGlutenFree, setIsGlutenFree] = useState(false);
+    const [comment, setComment] = useState('');
 
     useEffect(() => {
         const fetchRatingData = async () => {
@@ -24,9 +21,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
             if (data) {
                 const parsedData = JSON.parse(data);
                 setRating(Math.round(parsedData.rating));
-                setIsVegan(parsedData.isVegan);
-                setIsVegetarian(parsedData.isVegetarian);
-                setIsGlutenFree(parsedData.isGlutenFree);
+                setComment(parsedData.comment || '');
             }
         };
         fetchRatingData();
@@ -35,9 +30,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
     const handleSaveRating = async () => {
         const ratingData = {
             rating,
-            isVegan,
-            isVegetarian,
-            isGlutenFree,
+            comment,
         };
         await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(ratingData));
         console.log(`Datos de calificación guardados para el restaurante ID: ${restaurantId}`, ratingData);
@@ -54,23 +47,13 @@ const RatingModal: React.FC<RatingModalProps> = ({
                 color="#FFD700"
                 style={styles.starRating}
             />
-            <View style={styles.checkboxContainer}>
-                <CheckBox
-                    title="Opciones Veganas"
-                    checked={isVegan}
-                    onPress={() => setIsVegan(!isVegan)}
-                />
-                <CheckBox
-                    title="Opciones Vegetarianas"
-                    checked={isVegetarian}
-                    onPress={() => setIsVegetarian(!isVegetarian)}
-                />
-                <CheckBox
-                    title="Opciones Sin Gluten"
-                    checked={isGlutenFree}
-                    onPress={() => setIsGlutenFree(!isGlutenFree)}
-                />
-            </View>
+            <TextInput
+                style={styles.commentInput}
+                placeholder="Escribe un comentario..."
+                value={comment}
+                onChangeText={setComment}
+                multiline
+            />
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={handleSaveRating}>
                     <Text style={styles.buttonText}>GUARDAR</Text>
@@ -105,8 +88,15 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginBottom: 20,
     },
-    checkboxContainer: {
+    commentInput: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        padding: 10,
         marginBottom: 20,
+        backgroundColor: '#fff',
+        minHeight: 60,
+        textAlignVertical: 'top',
     },
     buttonContainer: {
         flexDirection: 'row',
