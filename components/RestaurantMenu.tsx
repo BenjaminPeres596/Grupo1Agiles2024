@@ -65,6 +65,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }
     return (
         <SafeAreaView style={styles.menuContainer}>
             <Text style={styles.menuTitle}>Menú de {restaurantName}</Text>
+            <View style={styles.menuTitleSeparator} /> {/* Línea separadora aquí */}
             <FlatList
                 data={platos}
                 keyExtractor={(item) => item.id}
@@ -92,68 +93,91 @@ export default RestaurantMenu;
 const styles = StyleSheet.create({
     menuContainer: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#FAFAFA',
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 12,
     },
     menuTitle: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: 'bold',
-        marginBottom: 20,
+        color: '#EF4423', // Color naranja para destacar el título
         textAlign: 'center',
-        color: '#2D3436',
-        borderBottomWidth: 2,
-        borderBottomColor: '#00B894',
-        paddingBottom: 8,
+        marginVertical: 16,
+        textTransform: 'uppercase',
+        letterSpacing: 1.2,
+    },
+    menuTitleSeparator: {
+        height: 2,
+        width: '50%',
+        backgroundColor: '#EF4423',
+        alignSelf: 'center',
+        marginBottom: 20,
+        borderRadius: 5,
     },
     PlatoContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 15,
-        padding: 15,
+        marginVertical: 8,
+        padding: 12,
         backgroundColor: '#FFFFFF',
-        borderRadius: 15,
+        borderRadius: 10,
         shadowColor: '#000',
         shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 4,
-        borderLeftWidth: 5,
-        borderLeftColor: '#00B894',
+        shadowOffset: { width: 0, height: 3 },
+        shadowRadius: 4,
+        elevation: 3,
+        borderLeftWidth: 4,
+        borderRightWidth: 4, // Línea en el lado derecho
+        borderLeftColor: '#EF4423',
+        borderRightColor: '#EF4423', // Color de la línea derecha
+
     },
     PlatoImage: {
-        width: 90,
-        height: 90,
+        width: 80,
+        height: 80,
         borderRadius: 10,
-        marginRight: 15,
+        marginRight: 12,
     },
     PlatoInfo: {
         flex: 1,
+        justifyContent: 'center',
     },
     PlatoName: {
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: '600',
-        color: '#2D3436',
+        color: '#333',
+        marginBottom: 4,
+    },
+    PlatoSeparator: {
+        height: 1,
+        backgroundColor: '#E0E0E0',
+        marginVertical: 6,
     },
     PlatoDescription: {
         fontSize: 14,
-        color: '#636E72',
-        marginTop: 4,
+        color: '#666',
+        marginBottom: 6,
     },
     PlatoPrice: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
-        color: '#00B894',
-        marginTop: 8,
+        color: '#EF4423',
     },
     buttonClose: {
-        backgroundColor: '#E63946',
-        padding: 14,
-        borderRadius: 10,
+        backgroundColor: '#EF4423',
+        paddingVertical: 12,
+        borderRadius: 25,
         alignItems: 'center',
-        marginTop: 30,
+        alignSelf: 'center',
+        marginTop: 20,
+        width: '60%',
+        shadowColor: '#EF4423',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
     buttonText: {
         color: '#FFFFFF',
-        fontWeight: 'bold',
-        fontSize: 18,
+        fontWeight: '600',
+        fontSize: 16,
     },
 });
