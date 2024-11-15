@@ -145,6 +145,16 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                         <Icon name="book" size={16} color="#FFFFFF" style={styles.buttonIcon} />
                         <Text style={styles.buttonText}>Menú</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.buttonQualify}
+                        onPress={() => {
+                            console.log("Botón Calificar presionado");
+                            setModalVisible(true); // Abre el modal de calificación
+                        }}
+                    >
+                        <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.buttonText}>Calificar</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
@@ -195,17 +205,6 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                             )}
                         />
                     )}
-                    <TouchableOpacity
-                        style={styles.buttonQualify}
-                        onPress={() => {
-                            console.log("Botón Calificar presionado");
-                            setModalVisible(true); // Abre el modal de calificación
-                            setCommentsVisible(false); // Cierra el modal de comentarios.
-                        }}
-                    >
-                        <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Calificar</Text>
-                    </TouchableOpacity>
                 </View>
             </Modal>
         </View>
