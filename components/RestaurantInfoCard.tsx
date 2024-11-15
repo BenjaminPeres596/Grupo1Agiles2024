@@ -245,6 +245,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 
             {loading ? (
               <Text style={styles.loadingText}>Cargando comentarios...</Text>
+            ) : comments.length === 0 ? (
+              <Text style={styles.noCommentsText}>
+                Aún no hay comentarios que mostrar
+              </Text>
             ) : (
               <FlatList
                 data={comments}
@@ -292,6 +296,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 8,
+  },
+  noCommentsText: {
+    fontSize: 16,
+    color: "#888", // Color suave para el mensaje de no comentarios
+    textAlign: "center", // Centrado del mensaje
+    marginTop: 20, // Espaciado para dar separación
   },
   image: {
     width: "100%",
