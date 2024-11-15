@@ -8,13 +8,14 @@ type RestaurantLocationProps = {
 };
 
 const RestaurantLocation: React.FC<RestaurantLocationProps> = ({ address }) => {
-  const handleOpenMap = () => {
-    const encodedAddress = encodeURIComponent(address);
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-    Linking.openURL(url).catch((err) =>
-      console.error("Error al abrir Google Maps:", err)
-    );
-  };
+    const handleOpenMap = () => {
+        const encodedAddress = encodeURIComponent(address);
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&travelmode=driving`;
+      
+        Linking.openURL(url).catch((err) =>
+          console.error("Error al abrir Google Maps:", err)
+        );
+      };
 
   return (
     <TouchableOpacity style={styles.button} onPress={handleOpenMap}>

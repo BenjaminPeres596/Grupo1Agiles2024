@@ -59,11 +59,12 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
   const [modalLocationVisible, setLocationVisible] = useState(false);
 
   const openGoogleMaps = () => {
-    const encodedAddress = encodeURIComponent(address); // Convierte la dirección en formato URL
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+    const encodedAddress = encodeURIComponent(address); // Dirección codificada
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&travelmode=driving`;
   
     Linking.openURL(googleMapsUrl).catch((err) => {
       console.error("Error al abrir Google Maps: ", err);
+      console.error("Error, No se pudo abrir Google Maps. Inténtalo de nuevo.");
     });
   };
 
