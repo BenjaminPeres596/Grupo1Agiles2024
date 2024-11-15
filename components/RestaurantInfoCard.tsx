@@ -328,12 +328,12 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     buttonIcon: {
-        marginRight: 2,
+        marginRight: 6,
     },
     buttonText: {
         color: '#FFFFFF',
         fontWeight: '600',
-        fontSize: 15,
+        fontSize: 14,
         textAlign: 'center',
     },
     nextButton: {
