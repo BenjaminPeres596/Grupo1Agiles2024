@@ -411,47 +411,51 @@
         zIndex: 10,
         paddingHorizontal: 10,
       },
-      promotedModalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.7)", // Fondo oscuro semitransparente para resaltar el modal
-        justifyContent: "center", // Centra verticalmente
-        alignItems: "center", // Centra horizontalmente
-      },
-      centeredCard: {
-        width: "80%",
-        padding: 16,
-        backgroundColor: "#EF4423",
-        borderRadius: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 5,
-        alignItems: "center", // Centra el contenido dentro del card
-      },
-      title: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "white",
-        textAlign: "center",
-        marginBottom: 10,
-      },
-      address: {
-        fontSize: 16,
-        color: "rgba(255, 255, 255, 0.9)",
-        textAlign: "center",
-        marginBottom: 20,
-      },
-      closeButton: {
-        backgroundColor: "white",
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        alignItems: "center",
-      },
-      closeButtonText: {
-        color: "#EF4423",
-        fontSize: 16,
-        fontWeight: "bold",
-      },
+        promotedModalOverlay: {
+            flex: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            justifyContent: "center",
+            alignItems: "center",
+        },
+        centeredCard: {
+            width: "80%",
+            padding: 20,
+            backgroundColor: "#333333",
+            borderRadius: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 5,
+            elevation: 4,
+            alignItems: "center",
+        },
+        title: {
+            fontSize: 20,
+            fontWeight: "600",
+            color: "#FFFFFF",
+            marginBottom: 8,
+        },
+        address: {
+            fontSize: 14,
+            color: "#CCCCCC",
+            textAlign: "center",
+            marginBottom: 12,
+        },
+        closeButton: {
+            backgroundColor: "#EF4423",
+            paddingVertical: 10,
+            paddingHorizontal: 18,
+            borderRadius: 8,
+            alignItems: "center",
+            shadowColor: "#EF4423",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.4,
+            shadowRadius: 4,
+        },
+        closeButtonText: {
+            color: "#FFFFFF",
+            fontSize: 16,
+            fontWeight: "600",
+        },
+
     });
