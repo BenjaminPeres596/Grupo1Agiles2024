@@ -42,6 +42,10 @@
       reviews?: any[];
       isFavorite?: boolean;
       isPromoted?: boolean;
+      isGlutenFree?: boolean;
+      isVegetarian?: boolean;
+      isVegan?: boolean;
+      isLactoseFree?: boolean;
     };
 
     export default function HomeScreen() {
@@ -145,6 +149,10 @@
                         description: restaurant.description || "Descripción no disponible",
                         image: restaurant.image || "https://via.placeholder.com/150",
                         isPromoted: restaurant.isPromoted || false,
+                        isGlutenFree: restaurant.isGlutenFree || false,
+                        isVegetarian: restaurant.isVegetarian || false,
+                        isVegan: restaurant.isVegan || false,
+                        isLactoseFree: restaurant.isLactoseFree || false,
                     }));
 
                     setNearbyRestaurants(formattedRestaurants);
@@ -353,6 +361,10 @@
                 selectedRestaurant.description || "Descripción no disponible"
               }
               image={selectedRestaurant.image || "https://via.placeholder.com/150"}
+              isGlutenFree={selectedRestaurant.isGlutenFree}
+              isVegetarian={selectedRestaurant.isVegetarian}
+              isVegan={selectedRestaurant.isVegan}
+              isLactoseFree={selectedRestaurant.isLactoseFree}
               onClose={closeModal}
               onFavoriteUpdate={handleFavoriteUpdate}
               moveToNextRestaurant={moveToNextRestaurant}

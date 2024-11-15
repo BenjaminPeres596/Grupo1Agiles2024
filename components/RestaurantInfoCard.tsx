@@ -19,6 +19,10 @@ type RestaurantInfoCardProps = {
     phone: string;
     description: string;
     image: string;
+    isGlutenFree?: boolean;
+    isVegetarian?: boolean;
+    isVegan?: boolean;
+    isLactoseFree?: boolean;
     onClose: () => void;
     onFavoriteUpdate: (favoriteIds: string[]) => void;
     moveToNextRestaurant: () => void;
@@ -31,6 +35,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     phone,
     description,
     image,
+    isGlutenFree,
+    isVegetarian,
+    isVegan,
+    isLactoseFree,
     onClose,
     onFavoriteUpdate,
     moveToNextRestaurant,
@@ -79,11 +87,27 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
         }
     };
 
+    const renderEmblems = () => {
+        const emblems = [];
+        if (isGlutenFree) emblems.push(require('../icons/gluten-free.png'));
+        if (isVegetarian) emblems.push(require('../icons/vegetarian.png'));
+        if (isVegan) emblems.push(require('../icons/vegan.png'));
+        if (isLactoseFree) emblems.push(require('../icons/lactose-free.png'));
+
+        return emblems.map((emblem, index) => (
+            <Image key={index} source={emblem} style={styles.emblem} />
+        ));
+    };
+
     return (
         <View style={styles.card}>
             <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
 
             <View style={styles.overlay} />
+
+            <View style={styles.emblemsContainer}>
+                {renderEmblems()}
+            </View>
 
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <Icon name="close" size={18} color="#FFFFFF" />
@@ -166,6 +190,20 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0, 0, 0, 0.4)',
         borderRadius: 16,
+    },
+    emblemsContainer: {
+        position: 'absolute',
+        top: 10,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center', 
+        alignItems: 'center',
+    },
+    emblem: {
+        width: 24,
+        height: 24,
+        marginRight: 8,
     },
     closeButton: {
         position: 'absolute',
