@@ -29,12 +29,44 @@ const RatingModal: React.FC<RatingModalProps> = ({
 
     const handleSaveRating = async () => {
         const ratingData = {
-            rating,
-            comment,
+             // Cambia "some_column" por el nombre real de la columna para el rating
+            comment_text: comment, // Cambia "other_column" por el nombre real de la columna para el comentario
+            restaurantId: restaurantId, // Supón que tienes una columna para vincular al restaurante
         };
-        await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(ratingData));
-        console.log(`Datos de calificación guardados para el restaurante ID: ${restaurantId}`, ratingData);
-        onClose();
+    
+        try {
+            // Guardar en la base de datos Supabase
+            const response = await fetch('https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Comentarios', {
+                method: 'POST',
+                headers: {
+                    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU',
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU',
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal',
+                },
+                body: JSON.stringify(ratingData),
+            });
+    
+            if (response.ok) {
+                console.log('Comentario guardado en la base de datos:', ratingData);
+            } else {
+                console.error('Error al guardar el comentario en la base de datos:', await response.text());
+            }
+    
+            // Guardar en AsyncStorage
+            const localRatingData = {
+                rating,
+                comment,
+            };
+    
+            await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(localRatingData));
+            console.log(`Datos de calificación guardados localmente para el restaurante ID: ${restaurantId}`, localRatingData);
+    
+            // Cerrar el modal
+            onClose();
+        } catch (error) {
+            console.error('Error al guardar el comentario:', error);
+        }
     };
 
     return (

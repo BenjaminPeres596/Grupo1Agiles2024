@@ -13,6 +13,10 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RestaurantMenu from './RestaurantMenu';
 
+const API_URL = 'https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Comentarios';
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU';
+
+
 type RestaurantInfoCardProps = {
     restaurantId: string;
     name: string;
@@ -38,14 +42,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [menuVisible, setMenuVisible] = useState(false);
-    const [commentsVisible, setCommentsVisible] = useState(false); // Nuevo estado
+    const [commentsVisible, setCommentsVisible] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
-
-    const comments = [
-        { id: '1', text: 'Excelente servicio y comida deliciosa.' },
-        { id: '2', text: 'Ambiente agradable, pero algo ruidoso.' },
-        { id: '3', text: 'Recomendado al 100%, volveré pronto.' },
-    ]; // Ejemplo de comentarios
+    const [comments, setComments] = useState<{ id: string; text: string }[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchFavoriteStatus = async () => {
@@ -61,6 +61,30 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
         };
         fetchFavoriteStatus();
     }, [restaurantId]);
+
+    const fetchComments = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_URL}?restaurantId=eq.${restaurantId}&select=*`, {
+                headers: {
+                    apikey: API_KEY,
+                    Authorization: `Bearer ${API_KEY}`,
+                },
+            });
+            const data = await response.json();
+            setComments(data.map((comment: any) => ({ id: comment.id, text: comment.comment_text })));
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (commentsVisible) {
+            fetchComments();
+        }
+    }, [commentsVisible]);
 
     const toggleFavorite = async () => {
         try {
@@ -167,13 +191,17 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                         <Icon name="close" size={20} color="#000" />
                     </TouchableOpacity>
                     <Text style={styles.modalTitle}>Comentarios</Text>
-                    <FlatList
-                        data={comments}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <Text style={styles.comment}>{item.text}</Text>
-                        )}
-                    />
+                    {loading ? (
+                        <Text>Cargando comentarios...</Text>
+                    ) : (
+                        <FlatList
+                            data={comments}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <Text style={styles.comment}>{item.text}</Text>
+                            )}
+                        />
+                    )}
                 </View>
             </Modal>
         </View>
