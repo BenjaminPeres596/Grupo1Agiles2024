@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 5,
-        marginTop: 30,
+        marginTop: 5,
     },
     buttonQualify: {
         backgroundColor: '#FF4D4D',
