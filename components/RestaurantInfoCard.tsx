@@ -6,11 +6,16 @@ import {
     StyleSheet,
     TouchableOpacity,
     Modal,
+    FlatList,
 } from 'react-native';
 import RatingModal from './RatingModal';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RestaurantMenu from './RestaurantMenu';
+
+const API_URL = 'https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Comentarios';
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU';
+
 
 type RestaurantInfoCardProps = {
     restaurantId: string;
@@ -37,7 +42,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [menuVisible, setMenuVisible] = useState(false);
+    const [commentsVisible, setCommentsVisible] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
+    const [comments, setComments] = useState<{ id: string; text: string }[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchFavoriteStatus = async () => {
@@ -53,6 +61,30 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
         };
         fetchFavoriteStatus();
     }, [restaurantId]);
+
+    const fetchComments = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_URL}?restaurantId=eq.${restaurantId}&select=*`, {
+                headers: {
+                    apikey: API_KEY,
+                    Authorization: `Bearer ${API_KEY}`,
+                },
+            });
+            const data = await response.json();
+            setComments(data.map((comment: any) => ({ id: comment.id, text: comment.comment_text })));
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (commentsVisible) {
+            fetchComments();
+        }
+    }, [commentsVisible]);
 
     const toggleFavorite = async () => {
         try {
@@ -100,18 +132,28 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 
                 <View style={styles.buttonsContainer}>
                     <TouchableOpacity
-                        style={styles.buttonQualify}
-                        onPress={() => setModalVisible(true)}
+                        style={styles.buttonComments}
+                        onPress={() => setCommentsVisible(true)}
                     >
-                        <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Calificar</Text>
+                        <Icon name="comments" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.buttonText}>Reseñas</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.buttonMenu}
                         onPress={() => setMenuVisible(true)}
                     >
                         <Icon name="book" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Ver Menú</Text>
+                        <Text style={styles.buttonText}>Menú</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.buttonQualify}
+                        onPress={() => {
+                            console.log("Botón Calificar presionado");
+                            setModalVisible(true); // Abre el modal de calificación
+                        }}
+                    >
+                        <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.buttonText}>Calificar</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -122,13 +164,18 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                     <Icon name="arrow-right" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
-            
+
             <Modal
                 visible={modalVisible}
                 animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
-                <RatingModal restaurantId={restaurantId} onClose={() => setModalVisible(false)} />
+                <RatingModal
+                    restaurantId={restaurantId}
+                    restaurantName={name} // Pasa el nombre del restaurante
+                    restaurantImage={image} // Pasa la imagen del restaurante
+                    onClose={() => setModalVisible(false)}
+                />
             </Modal>
 
             <Modal
@@ -137,6 +184,33 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                 onRequestClose={() => setMenuVisible(false)}
             >
                 <RestaurantMenu restaurantId={restaurantId} onClose={() => setMenuVisible(false)} />
+            </Modal>
+
+            <Modal
+                visible={commentsVisible}
+                animationType="slide"
+                onRequestClose={() => setCommentsVisible(false)}
+            >
+                <View style={styles.modalContent}>
+                    <TouchableOpacity
+                        style={styles.closeModalButton}
+                        onPress={() => setCommentsVisible(false)}
+                    >
+                        <Icon name="close" size={20} color="#000" />
+                    </TouchableOpacity>
+                    <Text style={styles.modalTitle}>Comentarios</Text>
+                    {loading ? (
+                        <Text>Cargando comentarios...</Text>
+                    ) : (
+                        <FlatList
+                            data={comments}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <Text style={styles.comment}>{item.text}</Text>
+                            )}
+                        />
+                    )}
+                </View>
             </Modal>
         </View>
     );
@@ -220,13 +294,15 @@ const styles = StyleSheet.create({
     buttonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10,
+        marginBottom: 5,
+        marginTop: 30,
     },
     buttonQualify: {
         backgroundColor: '#FF4D4D',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
+        justifyContent: 'center',
+        paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 24,
         flex: 1,
@@ -240,7 +316,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#28A745',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
+        justifyContent: 'center',
+        paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 24,
         flex: 1,
@@ -251,17 +328,18 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     buttonIcon: {
-        marginRight: 8,
+        marginRight: 6,
     },
     buttonText: {
         color: '#FFFFFF',
         fontWeight: '600',
-        fontSize: 15,
+        fontSize: 14,
+        textAlign: 'center',
     },
     nextButton: {
         position: 'absolute',
         right: 0,
-        bottom: 70,
+        bottom: 85,
         backgroundColor: '#FFD700',
         width: 45,
         height: 45,
@@ -272,6 +350,42 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 4,
+    },
+    buttonComments: {
+        backgroundColor: '#007BFF',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 24,
+        flex: 1,
+        marginLeft: 6,
+        shadowColor: '#007BFF',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+    },
+    modalContent: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        padding: 16,
+    },
+    closeModalButton: {
+        alignSelf: 'flex-end',
+        marginTop: 50,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    comment: {
+        fontSize: 16,
+        marginVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        paddingBottom: 8,
     },
 });
 
