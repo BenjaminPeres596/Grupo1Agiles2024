@@ -88,7 +88,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
                         return (
                             <Marker
                                 key={restaurant.id} // Simplifica la clave
-                                pinColor={isActive ? 'blue' : 'red'}
+                                pinColor={isActive ? '#EF4423' : 'red'}
                                 coordinate={{
                                     latitude: restaurant.latitude,
                                     longitude: restaurant.longitude,

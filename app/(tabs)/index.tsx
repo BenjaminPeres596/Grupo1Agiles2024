@@ -60,8 +60,9 @@
       const [maxDistance, setmaxDistance] = useState(15000);
       const [searchText, setSearchText] = useState("");
       const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-        const mapRef = useRef<MapView>(null);
-
+      const mapRef = useRef<MapView>(null);
+      const [restaurantOrder, setRestaurantOrder] = useState<FoodPoint[]>([]);
+      const [currentIndex, setCurrentIndex] = useState(0);
 
         const moveToLocation = (restaurant: FoodPoint) => {
             if (mapRef.current) {
@@ -77,21 +78,33 @@
       
         const moveToNextRestaurant = () => {
           if (selectedRestaurant && filteredRestaurants.length > 1) {
-              const distances = filteredRestaurants.map((restaurant) => {
-                  const distance = Math.sqrt(
-                      Math.pow(selectedRestaurant.latitude - restaurant.latitude, 2) +
-                      Math.pow(selectedRestaurant.longitude - restaurant.longitude, 2)
-                  );
-                  return { restaurant, distance };
-              });
+              // Si es la primera vez, calcula el orden
+              if (restaurantOrder.length === 0) {
+                  const distances = filteredRestaurants.map((restaurant) => {
+                      const distance = Math.sqrt(
+                          Math.pow(selectedRestaurant.latitude - restaurant.latitude, 2) +
+                          Math.pow(selectedRestaurant.longitude - restaurant.longitude, 2)
+                      );
+                      return { restaurant, distance };
+                  });
       
-              const nearest = distances
-                  .filter(({ restaurant }) => restaurant.id !== selectedRestaurant.id)
-                  .sort((a, b) => a.distance - b.distance)[0]?.restaurant;
+                  const sortedRestaurants = distances
+                      .filter(({ restaurant }) => restaurant.id !== selectedRestaurant.id)
+                      .sort((a, b) => a.distance - b.distance)
+                      .map(({ restaurant }) => restaurant);
       
-              if (nearest) {
-                  moveToLocation(nearest);
-                  setSelectedRestaurant(nearest); // Actualiza el restaurante seleccionado
+                  setRestaurantOrder(sortedRestaurants);
+                  setCurrentIndex(0);
+              }
+      
+              // Avanza al siguiente restaurante en el orden
+              const nextIndex = (currentIndex + 1) % restaurantOrder.length;
+              const nextRestaurant = restaurantOrder[nextIndex];
+      
+              if (nextRestaurant) {
+                  moveToLocation(nextRestaurant);
+                  setSelectedRestaurant(nextRestaurant);
+                  setCurrentIndex(nextIndex);
               }
           }
       };
