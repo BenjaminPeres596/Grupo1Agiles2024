@@ -18,7 +18,6 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }
     const [platos, setPlatos] = useState<Plato[]>([]);
     const [restaurantName, setRestaurantName] = useState('');
     const [loading, setLoading] = useState(true);
-    const [imageLoaded, setImageLoaded] = useState(false);
     const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU";
     const platosUrl = `https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Platos?select=*&restaurantId=eq.${restaurantId}`;
     const restaurantUrl = `https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Restaurantes?id=eq.${restaurantId}`;
