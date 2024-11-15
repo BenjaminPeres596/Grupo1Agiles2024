@@ -197,7 +197,11 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                     )}
                     <TouchableOpacity
                         style={styles.buttonQualify}
-                        onPress={() => setModalVisible(true)}
+                        onPress={() => {
+                            console.log("Botón Calificar presionado");
+                            setModalVisible(true); // Abre el modal de calificación
+                            setCommentsVisible(false); // Cierra el modal de comentarios.
+                        }}
                     >
                         <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
                         <Text style={styles.buttonText}>Calificar</Text>
