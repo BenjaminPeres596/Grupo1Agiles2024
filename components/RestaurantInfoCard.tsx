@@ -365,6 +365,7 @@ const styles = StyleSheet.create({
     },
     closeModalButton: {
         alignSelf: 'flex-end',
+        marginTop: 50,
     },
     modalTitle: {
         fontSize: 20,

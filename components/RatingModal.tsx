@@ -56,7 +56,6 @@ const RatingModal: React.FC<RatingModalProps> = ({
             // Guardar en AsyncStorage
             const localRatingData = {
                 rating,
-                comment,
             };
     
             await AsyncStorage.setItem(`restaurant_${restaurantId}`, JSON.stringify(localRatingData));
