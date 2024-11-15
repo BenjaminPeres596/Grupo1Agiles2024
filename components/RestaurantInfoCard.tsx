@@ -119,14 +119,14 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                         onPress={() => setMenuVisible(true)}
                     >
                         <Icon name="book" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Ver Menú</Text>
+                        <Text style={styles.buttonText}>Menú</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.buttonComments}
                         onPress={() => setCommentsVisible(true)}
                     >
                         <Icon name="comments" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Ver Comentarios</Text>
+                        <Text style={styles.buttonText}>Reseñas</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -258,13 +258,15 @@ const styles = StyleSheet.create({
     buttonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10,
+        marginBottom: 5,
+        marginTop: 30,
     },
     buttonQualify: {
         backgroundColor: '#FF4D4D',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
+        justifyContent: 'center',
+        paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 24,
         flex: 1,
@@ -278,7 +280,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#28A745',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
+        justifyContent: 'center',
+        paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 24,
         flex: 1,
@@ -295,11 +298,12 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: '600',
         fontSize: 15,
+        textAlign: 'center',
     },
     nextButton: {
         position: 'absolute',
         right: 0,
-        bottom: 70,
+        bottom: 85,
         backgroundColor: '#FFD700',
         width: 45,
         height: 45,
@@ -315,7 +319,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#007BFF',
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 8,
+        justifyContent: 'center',
+        paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 24,
         flex: 1,
