@@ -299,14 +299,21 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 15,
         right: 15,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 20,
-        padding: 8,
-        shadowColor: '#000',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', // Más opacidad para mejor visibilidad
+        borderRadius: 20, // Mantén un círculo perfecto
+        width: 40, // Tamaño uniforme
+        height: 40, // Tamaño uniforme
+        justifyContent: 'center', // Centrado vertical
+        alignItems: 'center', // Centrado horizontal
+        shadowColor: '#FF4D4D', // Sombra con el color del corazón
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 5, // Sombra en Android
+        borderWidth: 1, // Borde para destacar el ícono
+        borderColor: '#FF4D4D', // Color del borde que coincide con el ícono
     },
+
     infoContainer: {
         position: 'absolute',
         bottom: 20,
