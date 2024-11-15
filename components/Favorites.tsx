@@ -82,7 +82,7 @@ const Favoritos: React.FC<FavoritesProps> = ({
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#F3F4F6",
     },
     container: {
         flex: 1,
@@ -90,66 +90,71 @@ const styles = StyleSheet.create({
         paddingTop: 20,
     },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: "bold",
-        color: "#333",
+        color: "#EF4423",
         textAlign: "center",
-        marginBottom: 16,
+        marginBottom: 20,
     },
     listContent: {
         paddingBottom: 20,
     },
     card: {
         flexDirection: "row",
-        backgroundColor: "#ffffff",
-        borderRadius: 10,
-        marginVertical: 8,
-        padding: 12,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 16,
+        marginVertical: 10,
+        padding: 14,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
         elevation: 5,
+        borderLeftWidth: 4,
+        borderRightWidth: 4, // Línea en el lado derecho
+        borderLeftColor: '#EF4423',
+        borderRightColor: '#EF4423', // Color de la línea derecha+
         alignItems: "center",
     },
     image: {
         width: 60,
         height: 60,
-        borderRadius: 8,
-        marginRight: 12,
+        borderRadius: 12,
+        marginRight: 14,
     },
     cardInfo: {
         flex: 1,
     },
     name: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontWeight: "700",
         color: "#333",
     },
     address: {
         fontSize: 14,
-        color: "#666",
-        marginTop: 4,
+        color: "#555",
+        marginTop: 6,
     },
     noFavoritesText: {
         fontSize: 16,
-        color: "#999",
+        color: "#777",
         textAlign: "center",
         marginTop: 20,
     },
     closeButton: {
         backgroundColor: "#EF4423",
-        paddingVertical: 12,
-        borderRadius: 8,
+        paddingVertical: 14,
+        borderRadius: 12,
         alignItems: "center",
         marginHorizontal: 20,
         marginTop: 15,
     },
     buttonText: {
-        color: "#ffffff",
-        fontWeight: "600",
+        color: "#FFFFFF",
+        fontWeight: "700",
         fontSize: 16,
     },
 });
+
 
 export default Favoritos;
