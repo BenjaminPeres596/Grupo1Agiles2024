@@ -283,13 +283,17 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 15,
         left: 15,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        borderRadius: 20,
-        padding: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Fondo semitransparente para mejor integración
+        borderRadius: 50, // Círculo perfecto
+        width: 36, // Tamaño uniforme
+        height: 36, // Tamaño uniforme
+        justifyContent: 'center', // Centramos el contenido
+        alignItems: 'center', // Centramos el contenido
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 4,
+        elevation: 5, // Sombra en Android
     },
     heartButton: {
         position: 'absolute',
