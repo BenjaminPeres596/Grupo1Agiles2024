@@ -132,11 +132,11 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 
                 <View style={styles.buttonsContainer}>
                     <TouchableOpacity
-                        style={styles.buttonQualify}
-                        onPress={() => setModalVisible(true)}
+                        style={styles.buttonComments}
+                        onPress={() => setCommentsVisible(true)}
                     >
-                        <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Calificar</Text>
+                        <Icon name="comments" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.buttonText}>Reseñas</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.buttonMenu}
@@ -144,13 +144,6 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                     >
                         <Icon name="book" size={16} color="#FFFFFF" style={styles.buttonIcon} />
                         <Text style={styles.buttonText}>Menú</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.buttonComments}
-                        onPress={() => setCommentsVisible(true)}
-                    >
-                        <Icon name="comments" size={16} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Reseñas</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -202,6 +195,13 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                             )}
                         />
                     )}
+                    <TouchableOpacity
+                        style={styles.buttonQualify}
+                        onPress={() => setModalVisible(true)}
+                    >
+                        <Icon name="star" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.buttonText}>Calificar</Text>
+                    </TouchableOpacity>
                 </View>
             </Modal>
         </View>
