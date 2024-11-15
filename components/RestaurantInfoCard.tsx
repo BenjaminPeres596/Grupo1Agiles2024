@@ -211,7 +211,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
           restaurantId={restaurantId}
           restaurantName={name} // Pasa el nombre del restaurante
           restaurantImage={image} // Pasa la imagen del restaurante
-          onClose={() => setModalVisible(false)}
+          onClose={() => {
+            setModalVisible(false); // Cierra el modal
+            fetchComments(); // Obtiene los comentarios después de cerrar el modal
+          }}
         />
       </Modal>
 
