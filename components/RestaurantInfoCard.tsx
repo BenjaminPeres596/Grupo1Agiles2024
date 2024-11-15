@@ -24,6 +24,10 @@ type RestaurantInfoCardProps = {
     phone: string;
     description: string;
     image: string;
+    isGlutenFree?: boolean;
+    isVegetarian?: boolean;
+    isVegan?: boolean;
+    isLactoseFree?: boolean;
     onClose: () => void;
     onFavoriteUpdate: (favoriteIds: string[]) => void;
     moveToNextRestaurant: () => void;
@@ -36,6 +40,10 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
     phone,
     description,
     image,
+    isGlutenFree,
+    isVegetarian,
+    isVegan,
+    isLactoseFree,
     onClose,
     onFavoriteUpdate,
     moveToNextRestaurant,
@@ -111,11 +119,27 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
         }
     };
 
+    const renderEmblems = () => {
+        const emblems = [];
+        if (isGlutenFree) emblems.push(require('../icons/gluten-free.png'));
+        if (isVegetarian) emblems.push(require('../icons/vegetarian.png'));
+        if (isVegan) emblems.push(require('../icons/vegan.png'));
+        if (isLactoseFree) emblems.push(require('../icons/lactose-free.png'));
+
+        return emblems.map((emblem, index) => (
+            <Image key={index} source={emblem} style={styles.emblem} />
+        ));
+    };
+
     return (
         <View style={styles.card}>
             <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
 
             <View style={styles.overlay} />
+
+            <View style={styles.emblemsContainer}>
+                {renderEmblems()}
+            </View>
 
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <Icon name="close" size={18} color="#FFFFFF" />
@@ -241,30 +265,55 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.4)',
         borderRadius: 16,
     },
+    emblemsContainer: {
+        position: 'absolute',
+        top: 10,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        justifyContent: 'center', 
+        alignItems: 'center',
+    },
+    emblem: {
+        width: 24,
+        height: 24,
+        marginRight: 8,
+    },
     closeButton: {
         position: 'absolute',
         top: 15,
         left: 15,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        borderRadius: 20,
-        padding: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Fondo semitransparente para mejor integración
+        borderRadius: 50, // Círculo perfecto
+        width: 36, // Tamaño uniforme
+        height: 36, // Tamaño uniforme
+        justifyContent: 'center', // Centramos el contenido
+        alignItems: 'center', // Centramos el contenido
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.5,
         shadowRadius: 4,
+        elevation: 5, // Sombra en Android
     },
     heartButton: {
         position: 'absolute',
         top: 15,
         right: 15,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 20,
-        padding: 8,
-        shadowColor: '#000',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', // Más opacidad para mejor visibilidad
+        borderRadius: 20, // Mantén un círculo perfecto
+        width: 40, // Tamaño uniforme
+        height: 40, // Tamaño uniforme
+        justifyContent: 'center', // Centrado vertical
+        alignItems: 'center', // Centrado horizontal
+        shadowColor: '#FF4D4D', // Sombra con el color del corazón
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 5, // Sombra en Android
+        borderWidth: 1, // Borde para destacar el ícono
+        borderColor: '#FF4D4D', // Color del borde que coincide con el ícono
     },
+
     infoContainer: {
         position: 'absolute',
         bottom: 20,
@@ -295,7 +344,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 5,
-        marginTop: 30,
+        marginTop: 5,
     },
     buttonQualify: {
         backgroundColor: '#FF4D4D',
@@ -338,18 +387,20 @@ const styles = StyleSheet.create({
     },
     nextButton: {
         position: 'absolute',
-        right: 0,
-        bottom: 85,
-        backgroundColor: '#FFD700',
-        width: 45,
-        height: 45,
-        borderRadius: 22.5,
+        right: 0, 
+        bottom: 75, 
+        paddingHorizontal: 16, 
+        paddingVertical: 12, 
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', 
+        borderRadius: 8, 
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#FFD700',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.5,
+        shadowOpacity: 0.3,
         shadowRadius: 4,
+        elevation: 3,
+        flexDirection: 'row',
     },
     buttonComments: {
         backgroundColor: '#007BFF',
