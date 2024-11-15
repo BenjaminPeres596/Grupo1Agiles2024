@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={onProfilePress} style={styles.iconContainer}>
-          <Ionicons name="person-circle-outline" size={32} color="white" />
+          <Ionicons name="star-outline" size={32} color="white" />
         </TouchableOpacity>
 
         <View style={styles.titleContainer}>
