@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 
 type Plato = {
     id: string;
@@ -17,6 +17,8 @@ type RestaurantMenuProps = {
 const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }) => {
     const [platos, setPlatos] = useState<Plato[]>([]);
     const [restaurantName, setRestaurantName] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [imageLoaded, setImageLoaded] = useState(false);
     const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lb2JnaXNsbHRhd2JtbHl4dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwMTk2MzUsImV4cCI6MjA0NjU5NTYzNX0.LDFkamJY2LibAns-wIy1WCEl5DVdj5rjvaecIJVkJSU";
     const platosUrl = `https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Platos?select=*&restaurantId=eq.${restaurantId}`;
     const restaurantUrl = `https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Restaurantes?id=eq.${restaurantId}`;
@@ -58,28 +60,38 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }
             }
         };
 
-        fetchPlatos();
-        fetchRestaurantName();
+        setLoading(true);
+
+        Promise.all([fetchPlatos(), fetchRestaurantName()])
+            .finally(() => {
+                setLoading(false); // Se actualiza a false cuando ambas solicitudes terminan
+            });
+        
     }, [restaurantId]);
 
     return (
         <SafeAreaView style={styles.menuContainer}>
             <Text style={styles.menuTitle}>Menú de {restaurantName}</Text>
             <View style={styles.menuTitleSeparator} />
-            <FlatList
-                data={platos}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.PlatoContainer}>
-                        <Image source={{ uri: item.image }} style={styles.PlatoImage} />
-                        <View style={styles.PlatoInfo}>
-                            <Text style={styles.PlatoName}>{item.name}</Text>
-                            <Text style={styles.PlatoDescription}>{item.description}</Text>
-                            <Text style={styles.PlatoPrice}>${item.price}</Text>
+
+            {loading ? (
+                <ActivityIndicator size="large" color="#FF0000" style={styles.loader} />
+            ) : (
+                <FlatList
+                    data={platos}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.PlatoContainer}>
+                            <Image source={{ uri: item.image }} style={styles.PlatoImage} />
+                            <View style={styles.PlatoInfo}>
+                                <Text style={styles.PlatoName}>{item.name}</Text>
+                                <Text style={styles.PlatoDescription}>{item.description}</Text>
+                                <Text style={styles.PlatoPrice}>${item.price}</Text>
+                            </View>
                         </View>
-                    </View>
-                )}
-            />
+                    )}
+                />
+            )}
 
             <TouchableOpacity style={styles.buttonClose} onPress={onClose}>
                 <Text style={styles.buttonText}>Cerrar</Text>
@@ -140,6 +152,11 @@ const styles = StyleSheet.create({
     PlatoInfo: {
         flex: 1,
         justifyContent: 'center',
+    },
+    loader: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     PlatoName: {
         fontSize: 18,
