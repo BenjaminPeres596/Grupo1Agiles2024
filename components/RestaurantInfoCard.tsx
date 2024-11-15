@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     buttonIcon: {
-        marginRight: 8,
+        marginRight: 2,
     },
     buttonText: {
         color: '#FFFFFF',
