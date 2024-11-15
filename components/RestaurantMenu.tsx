@@ -65,7 +65,7 @@ const RestaurantMenu: React.FC<RestaurantMenuProps> = ({ restaurantId, onClose }
     return (
         <SafeAreaView style={styles.menuContainer}>
             <Text style={styles.menuTitle}>Menú de {restaurantName}</Text>
-            <View style={styles.menuTitleSeparator} /> {/* Línea separadora aquí */}
+            <View style={styles.menuTitleSeparator} />
             <FlatList
                 data={platos}
                 keyExtractor={(item) => item.id}
