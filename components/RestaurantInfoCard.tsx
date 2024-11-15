@@ -170,7 +170,12 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
                 animationType="slide"
                 onRequestClose={() => setModalVisible(false)}
             >
-                <RatingModal restaurantId={restaurantId} onClose={() => setModalVisible(false)} />
+                <RatingModal
+                    restaurantId={restaurantId}
+                    restaurantName={name} // Pasa el nombre del restaurante
+                    restaurantImage={image} // Pasa la imagen del restaurante
+                    onClose={() => setModalVisible(false)}
+                />
             </Modal>
 
             <Modal
