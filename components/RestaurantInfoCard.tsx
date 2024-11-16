@@ -210,17 +210,17 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.buttonMenu}
+            style={[styles.buttonMenu, { backgroundColor: "#FF8C00" }]} // Color amarillo
             onPress={openGoogleMaps}
-            >
+          >
             <Icon
-                name="book"
-                size={16}
-                color="#FFFFFF"
-                style={styles.buttonIcon}
+              name="map" // Cambiar el ícono por "map" de FontAwesome
+              size={16}
+              color="#FFFFFF"
+              style={styles.buttonIcon}
             />
             <Text style={styles.buttonText}>Ir</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
         </View>
 
