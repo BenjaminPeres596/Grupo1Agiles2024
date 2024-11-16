@@ -260,7 +260,8 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
       </Modal>
 
       <Modal
-        visible={commentsVisible}
+         visible={commentsVisible}
+        transparent={true}
         animationType="slide"
         onRequestClose={() => setCommentsVisible(false)}
       >
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#FFFFFF",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "center",
   },
 });
