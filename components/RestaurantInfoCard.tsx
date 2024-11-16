@@ -22,6 +22,8 @@ const API_KEY =
 type RestaurantInfoCardProps = {
   restaurantId: string;
   name: string;
+  latitude: number;
+  longitude: number;
   address: string;
   phone: string;
   description: string;
@@ -38,6 +40,8 @@ type RestaurantInfoCardProps = {
 const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
   restaurantId,
   name,
+  latitude,
+  longitude,
   address,
   phone,
   description,
@@ -59,8 +63,7 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
 
 
   const openGoogleMaps = () => {
-    const encodedAddress = encodeURIComponent(address); // Dirección codificada
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&travelmode=driving`;
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`;
   
     Linking.openURL(googleMapsUrl).catch((err) => {
       console.error("Error al abrir Google Maps: ", err);
