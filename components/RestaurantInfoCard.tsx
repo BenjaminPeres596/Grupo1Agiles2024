@@ -13,7 +13,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import RestaurantMenu from "./RestaurantMenu";
 import { Linking } from "react-native";
-import RestaurantLocation from "./RestaurantLocation";
+
 
 const API_URL = "https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Comentarios";
 const API_KEY =
@@ -56,7 +56,7 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const [comments, setComments] = useState<{ id: string; text: string }[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalLocationVisible, setLocationVisible] = useState(false);
+
 
   const openGoogleMaps = () => {
     const encodedAddress = encodeURIComponent(address); // Dirección codificada
