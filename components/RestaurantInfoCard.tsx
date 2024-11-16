@@ -12,6 +12,8 @@ import RatingModal from "./RatingModal";
 import Icon from "react-native-vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import RestaurantMenu from "./RestaurantMenu";
+import { Linking } from "react-native";
+
 
 const API_URL = "https://meobgislltawbmlyxuhw.supabase.co/rest/v1/Comentarios";
 const API_KEY =
@@ -20,6 +22,8 @@ const API_KEY =
 type RestaurantInfoCardProps = {
   restaurantId: string;
   name: string;
+  latitude: number;
+  longitude: number;
   address: string;
   phone: string;
   description: string;
@@ -36,6 +40,8 @@ type RestaurantInfoCardProps = {
 const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
   restaurantId,
   name,
+  latitude,
+  longitude,
   address,
   phone,
   description,
@@ -54,6 +60,16 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const [comments, setComments] = useState<{ id: string; text: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+
+  const openGoogleMaps = () => {
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`;
+  
+    Linking.openURL(googleMapsUrl).catch((err) => {
+      console.error("Error al abrir Google Maps: ", err);
+      console.error("Error, No se pudo abrir Google Maps. Inténtalo de nuevo.");
+    });
+  };
 
   useEffect(() => {
     const fetchFavoriteStatus = async () => {
@@ -192,6 +208,20 @@ const RestaurantInfoCard: React.FC<RestaurantInfoCardProps> = ({
             />
             <Text style={styles.buttonText}>Menú</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.buttonMenu, { backgroundColor: "#FF8C00" }]} // Color amarillo
+            onPress={openGoogleMaps}
+          >
+            <Icon
+              name="map" // Cambiar el ícono por "map" de FontAwesome
+              size={16}
+              color="#FFFFFF"
+              style={styles.buttonIcon}
+            />
+            <Text style={styles.buttonText}>Ir</Text>
+          </TouchableOpacity>
+
         </View>
 
         <TouchableOpacity

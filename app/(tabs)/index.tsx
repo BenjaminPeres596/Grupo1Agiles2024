@@ -361,6 +361,8 @@
             <RestaurantInfoCard
               restaurantId={selectedRestaurant.id}
               name={selectedRestaurant.name}
+              latitude={selectedRestaurant.latitude}
+              longitude={selectedRestaurant.longitude}
               address={selectedRestaurant.address || "Dirección no disponible"}
               phone={selectedRestaurant.phone || "Teléfono no disponible"}
               description={
