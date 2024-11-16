@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6'; // Icono del header
 
 const LoginScreen: React.FC = () => {
   const { login } = useAuth(); // Llama al contexto}
@@ -57,71 +59,100 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Usuario"
-        value={usuario}
-        onChangeText={setUsuario}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      {error && <Text style={styles.error}>{error}</Text>}
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Ingresar</Text>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
+    return (
+        <LinearGradient
+            colors={['#EF4423', '#FFA726']}
+            style={styles.gradient}
+        >
+            <View style={styles.container}>
+                {/* Icono del logo */}
+                <FontAwesome6 name="plate-wheat" size={100} color="#FFFFFF" style={styles.icon} />
+
+                <Text style={styles.title}>Iniciar Sesión</Text>
+
+                <TextInput
+                    style={styles.input}
+                    placeholder="Usuario"
+                    value={usuario}
+                    onChangeText={setUsuario}
+                    autoCapitalize="none"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Contraseña"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
+                {error && <Text style={styles.error}>{error}</Text>}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={styles.buttonText}>Ingresar</Text>
+                    )}
+                </TouchableOpacity>
+            </View>
+        </LinearGradient>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f8f9fa',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 16,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  button: {
-    backgroundColor: '#EF4423',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  error: {
-    color: 'red',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+    gradient: {
+        flex: 1,
+    },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center', // Centra todo horizontalmente
+        paddingHorizontal: 20,
+    },
+    icon: {
+        marginBottom: 30, // Espacio entre el logo y el título
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: '#FFFFFF',
+        marginBottom: 40,
+    },
+    input: {
+        height: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 10,
+        paddingHorizontal: 15,
+        marginBottom: 20,
+        fontSize: 16,
+        color: '#333',
+        width: '100%', // Asegura que los campos ocupen todo el ancho del contenedor
+        elevation: 2,
+    },
+    button: {
+        backgroundColor: '#FF6F61',
+        paddingVertical: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        width: '100%',
+    },
+    buttonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    error: {
+        color: '#FF6F61',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
 });
 
 export default LoginScreen;
